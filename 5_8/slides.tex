@@ -1,0 +1,398 @@
+% Copyright (c) 2022 by Lars Spreng
+% This work is licensed under the Creative Commons Attribution 4.0 International License.
+
+\documentclass[
+11pt,notheorems,hyperref={pdfauthor=whatever}
+]{beamer}
+
+\usepackage{kotex}
+\input{loadslides.tex}
+
+\usepackage{fontspec}
+\setmainhangulfont[
+    Path=/Users/seojunha/Library/Fonts/,
+    BoldFont=NotoSansCJKkr-Bold.otf
+]{NotoSansCJKkr-Regular.otf}
+\setsanshangulfont[
+    Path=/Users/seojunha/Library/Fonts/,
+    BoldFont=NotoSansCJKkr-Bold.otf
+]{NotoSansCJKkr-Regular.otf}
+\setmonohangulfont[
+    Path=/Users/seojunha/Library/Fonts/,
+    BoldFont=NotoSansCJKkr-Bold.otf
+]{NotoSansCJKkr-Regular.otf}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc}
+
+\addtobeamertemplate{frametitle}{}{\vspace{-0.5em}}
+
+\newcommand{\paperbox}[2]{%
+  \begin{block}{#1}
+  \scriptsize #2
+  \end{block}
+}
+\newcommand{\paperfig}[1]{%
+  \makebox[\textwidth][c]{\includegraphics[width=1.02\textwidth,height=0.49\textheight,keepaspectratio]{#1}}
+}
+\newcommand{\venue}[1]{{\footnotesize\textcolor{gray!70}{#1}}}
+\newcommand{\surveyframe}[6]{%
+\begin{frame}{#1}
+\vspace{-0.2em}
+{\raggedright\venue{#2}\par}
+\vspace{0.28em}
+\centering
+\paperfig{#3}
+\vspace{0.12em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.31\textwidth}
+\paperbox{기존 방법의 문제점}{#4}
+\end{column}
+\begin{column}{0.31\textwidth}
+\paperbox{해결 방법}{#5}
+\end{column}
+\begin{column}{0.31\textwidth}
+\begin{alertblock}{Novelty}
+\scriptsize #6
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+}
+
+\title[]{Multi-Agent + Sequential Acquisition 연구 서베이}
+\subtitle{7 Papers for Meeting Discussion}
+\author[]{하서준}
+\institute{DGIST}
+\date{2026년 5월 8일}
+
+\begin{document}
+
+{
+\setbeamertemplate{footline}{}
+\begin{frame}
+  \titlepage
+  \vspace{-0.8em}
+  \begin{center}
+  \scriptsize
+  Agent collaboration and sequential evidence acquisition
+  \end{center}
+\end{frame}
+}
+\addtocounter{framenumber}{-1}
+
+\begin{frame}{Survey Map}
+\vspace{0.2em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.47\textwidth}
+\begin{block}{1. Multi-agent}
+\scriptsize
+\textbf{핵심 질문}\\
+여러 specialist/agent를 어떻게 배정, 조정, 검증, 종료할 것인가?
+
+\vspace{0.55em}
+\textbf{Papers}\\
+MAM\\
+ConfAgents\\
+MMedAgent-RL
+\end{block}
+\end{column}
+\begin{column}{0.47\textwidth}
+\begin{block}{2. Sequential Acquisition}
+\scriptsize
+\textbf{핵심 질문}\\
+비용이 있는 modality/test 중 다음에 무엇을 얻고 언제 멈출 것인가?
+
+\vspace{0.55em}
+\textbf{Papers}\\
+CAMA\\
+AdaFuse\\
+LDTL
+\end{block}
+\end{column}
+\end{columns}
+
+\vspace{0.8em}
+\begin{center}
+\footnotesize
+\textbf{발표 흐름:} Multi-agent로 역할/검증 구조를 먼저 잡고, Sequential Acquisition으로 ``다음 evidence 선택'' 문제로 연결
+\end{center}
+\end{frame}
+
+\surveyframe
+{MAM: Modular Multi-Agent Medical Diagnosis}
+{Multi-agent · ACL Findings 2025}
+{figures/survey/mam_overview.png}
+{통합 멀티모달 모델은 지식 업데이트 시 전체 재학습이 필요하고, 다양한 임상 태스크에 유연하게 대응할 수 있는 모듈성이 부족하다. 또한 하나의 LLM이 여러 specialty 진단을 모두 잘 수행하기 어렵다.}
+{GP, Specialist, Radiologist, Director로 역할을 분해하고 Medical Assistant가 RAG로 외부 지식을 검색·요약하여 agent 간 토론에 제공한다. 이를 통해 전체 재학습 없이 멀티모달 진단을 수행한다.}
+{Role assignment만으로 진단 성능 향상 확인. GP $\rightarrow$ Specialist $\rightarrow$ Director 구조로 재학습 없는 지식 업데이트와 RAG 기반 외부 지식 통합}
+
+\surveyframe
+{ConfAgents: Conformal-Guided Adaptive Collaboration}
+{Multi-agent · arXiv 2025}
+{figures/survey/confagents_overview.png}
+{기존 방법은 모든 케이스에 동일한 비싼 멀티 에이전트 과정을 적용해 최대 50배 느리다. 또한 LLM이 스스로 보고하는 확신도는 보정이 잘 되어 있지 않아 난이도 구분이 어렵고, 정적인 사전학습 지식만으로 새로운 임상 케이스에 대응하기 어렵다.}
+{MainAgent가 선택지별 확률을 부여하면, CP Judger가 유사 문제들의 calibration 분포로 불확실한 선택지를 소거한다. 하나만 남으면 즉시 답변하고, 둘 이상 남으면 선택지별 AssistAgent가 의학 문헌을 iterative RAG로 검색해 근거를 수집한다. 마지막으로 MainAgent가 근거를 종합한다.}
+{Conformal prediction으로 LLM 확신도 보정 문제 해결. 어려운 케이스에만 협업을 투입해 accuracy 유지 + 최대 7.71배 효율}
+
+\surveyframe
+{MMedAgent-RL: RL-Optimized Multi-Agent Collaboration}
+{Multi-agent · ICLR 2026}
+{figures/survey/mmedagent_rl_overview.png}
+{Single Med-LVLM은 다양한 의료 전문 영역을 하나의 모델이 모두 처리해야 해 전문성 일반화에 한계가 있고, 기존 multi-agent는 고정 workflow에 의존해 specialist 의견을 선택적으로 신뢰·수정하는 협업 전략을 학습하지 못한다.}
+{환자를 적절한 진료과로 배정하는 triage agent를 RL로 학습시키고, 각 진료과별 specialist LLM이 진단 의견을 생성하도록 한다. 이후 쉬운 케이스부터 어려운 케이스 순으로 attending physician을 점진적으로 학습시켜, 일부 specialist 의견이 틀리거나 충돌해도 올바른 최종 진단을 내리도록 한다.}
+{정적인 multi-agent workflow를 강화학습으로 최적화해 specialist 오류를 극복하는 \textbf{dynamic collaboration} 실현}
+
+\surveyframe
+{CAMA: Cohort-based Active Modality Acquisition}
+{Sequential Acquisition · arXiv 2025}
+{figures/survey/cama_overview.png}
+{기존 AFA/AMA는 환자 단위 acquisition에 집중한다. 실제 임상은 코호트 전체 예산이 주어지고, 어떤 환자에게 추가 검사를 줄지 cohort-level로 결정해야 하나 정식화가 부족했다.}
+{Generative imputation으로 missing modality를 시뮬레이션하여, 획득 시 기대 성능 향상이 가장 큰 환자를 우선순위화하는 코호트 단위 acquisition을 수행한다.}
+{Cohort-level active modality acquisition 문제를 최초로 정식화}
+
+\surveyframe
+{AdaFuse: Adaptive Multimodal Fusion via Reinforcement Learning}
+{Sequential Acquisition · arXiv 2026}
+{figures/survey/adafuse_overview.png}
+{기존 multimodal fusion은 모든 환자에게 동일한 modality를 사용하지만, 특정 환자에게 불필요한 modality는 예측에 도움이 되지 않거나 오히려 노이즈로 작용할 수 있다.}
+{각 환자마다 어떤 modality 조합이 유용한지 RL로 학습하여, 불필요한 modality를 제외하고 informative한 조합만 선택적으로 fusion}
+{Patient-specific modality selection을 RL 기반 sequential decision으로 정식화해 noisy modality를 빼고 예측}
+
+\surveyframe
+{LDTL: Latent Diagnostic Trajectory Learning}
+{Sequential Acquisition · arXiv 2026}
+{figures/survey/ldtl_overview.png}
+{대부분의 LLM 진단 시스템은 full-information setting을 가정한다. Sequential test selection 연구도 reward 중심이라 diagnostic trajectory 분포를 명시적으로 모델링하지 못하고, desirable path supervision도 부족하다.}
+{Planning LLM과 Diagnostic LLM을 분리한다. Diagnostic agent가 test sequence를 latent path로 보고, information gain이 큰 trajectory에 높은 posterior를 부여해 Planning agent가 이를 따르도록 학습한다.}
+{Diagnostic trajectory를 latent variable로 모델링. 정답 경로 label 없이 information gain 기반으로 더 적은 검사와 높은 정확도 유도}
+
+\begin{frame}{Our Framing: From Acquisition to Reasoning}
+\vspace{0.35em}
+\begin{block}{1. 모듈성 부족}
+\small
+기존 modality acquisition은 특정 모델/태스크에 묶여 있어 새로운 modality나 지식 업데이트에 유연하게 대응하기 어렵다.
+\end{block}
+\vspace{0.1em}
+\begin{block}{2. 중간 과정 불투명}
+\small
+RL 기반 선택 정책은 중간 추론 과정을 드러내지 않아, 의사가 판단을 검토하고 개입하는 협업 구조로 확장하기 어렵다.
+\end{block}
+\vspace{0.1em}
+\begin{block}{3. 대부분의 연구가 feature + text 수준에 머무름}
+\small
+기존 연구는 feature를 ``획득할지 말지''의 선택 문제로 다루지만, 실제 임상에서 이미지, 파형처럼 비용과 검사 시간이 모두 다른 정보를 어떻게 선택할지는 충분히 다루지 않는다.
+\end{block}
+
+\end{frame}
+
+{
+\setbeamertemplate{footline}{}
+\title[]{현재 진행상황}
+\subtitle{5/12 Meeting}
+\date{2026년 5월 12일}
+\begin{frame}
+  \titlepage
+\end{frame}
+}
+
+\begin{frame}{Candidate Datasets for Active Modality Acquisition}
+\vspace{0.2em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{MMIST-ccRCC}
+\scriptsize
+\textbf{설명}\\
+멀티모달 의료 데이터셋\\
+\textcolor{gray!75}{CVPR 사용}
+
+\vspace{0.45em}
+\textbf{모달리티}\\
+CT\\
+MRI\\
+병리 슬라이드 이미지\\
+Genomics\\
+Clinical data
+
+\vspace{0.45em}
+\textbf{후보 이유}\\
+서로 다른 비용과 결측률을 가진 다양한 의료 모달리티를 함께 검증할 수 있는 데이터셋
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{MIMIC-CDM}
+\scriptsize
+\textbf{설명}\\
+Clinical decision making을 위한 실제 환자 기록 기반 데이터셋
+
+\vspace{0.45em}
+\textbf{모달리티}\\
+Physical: 신체진찰 노트\\
+Lab: 검사 수치 + reference range + microbiology\\
+Imaging: radiology report
+
+\vspace{0.45em}
+\textbf{후보 이유}\\
+표 형태 검사 수치와 임상 텍스트를 이용해, 진단 과정에서 어떤 정보를 다음에 볼지 평가할 수 있는 두 번째 데이터셋
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Why Greedy Selection Can Fail}
+\centering
+\vspace{-0.1em}
+\begin{tikzpicture}[
+  node distance=1.0cm and 1.05cm,
+  state/.style={draw, rounded corners=2pt, align=center, inner sep=5pt, font=\scriptsize, fill=white},
+  greedy/.style={draw=red!75!black, very thick, fill=red!8},
+  good/.style={draw=green!45!black, very thick, fill=green!8},
+  weak/.style={draw=gray!60, fill=gray!6},
+  edge/.style={-{Latex[length=2.3mm]}, thick, gray!65},
+  rededge/.style={-{Latex[length=2.3mm]}, very thick, red!75!black},
+  greenedge/.style={-{Latex[length=2.3mm]}, very thick, green!45!black}
+]
+\node[state] (root) at (0,0) {$O_t$\\Demographics only};
+
+\node[state, greedy] (lab) at (-4.4,-1.35) {Lab\\\textbf{즉시 gain +0.12}};
+\node[state, weak] (ecg) at (0,-1.35) {ECG\\즉시 gain +0.05};
+\node[state, weak] (cxr) at (4.2,-1.35) {CXR\\즉시 gain +0.04};
+
+\node[state, greedy] (labecg) at (-5.9,-2.9) {Lab + ECG\\최종 gain +0.20};
+\node[state, weak] (labcxr) at (-3.0,-2.9) {Lab + CXR\\최종 gain +0.18};
+\node[state, good] (ecgcxr) at (1.1,-2.9) {ECG + CXR\\\textbf{최종 gain +0.45}};
+\node[state, weak] (ecglab) at (3.6,-2.9) {ECG + Lab\\최종 gain +0.20};
+
+\node[state, greedy, text width=3.0cm] (fail) at (-5.0,-4.45) {\textbf{Greedy path}\\눈앞의 Lab 선택\\보완 신호를 놓침};
+\node[state, good, text width=3.2cm] (success) at (1.1,-4.45) {\textbf{Complementary path}\\단독 gain은 작지만\\조합 정보가 큼};
+
+\draw[rededge] (root) -- (lab);
+\draw[edge] (root) -- (ecg);
+\draw[edge] (root) -- (cxr);
+
+\draw[rededge] (lab) -- (labecg);
+\draw[edge] (lab) -- (labcxr);
+\draw[greenedge] (ecg) -- (ecgcxr);
+\draw[edge] (ecg) -- (ecglab);
+\draw[edge] (cxr) -- (ecgcxr);
+
+\draw[rededge] (labecg) -- (fail);
+\draw[greenedge] (ecgcxr) -- (success);
+
+\node[font=\scriptsize, text=red!75!black, align=center] at (-5.35,-0.65) {Step 1에서\\가장 커 보임};
+\node[font=\scriptsize, text=green!45!black, align=center] at (2.5,-2.05) {단독으로는 약하지만\\함께 보면 강함};
+\end{tikzpicture}
+
+\vspace{0.25em}
+\begin{alertblock}{핵심}
+\scriptsize
+Greedy는 매 순간 가장 큰 즉시 gain을 고르기 때문에, 단독으로는 약하지만 함께 볼 때 강한 모달리티 조합을 놓칠 수 있다.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{How Can We Search All Paths?}
+\vspace{0.2em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{문제: path 수의 폭발}
+\scriptsize
+모달리티가 늘어나면 sequential path는 빠르게 증가한다.
+
+\vspace{0.4em}
+예시: Lab, ECG, CXR
+
+\vspace{0.25em}
+Lab $\rightarrow$ ECG $\rightarrow$ CXR\\
+Lab $\rightarrow$ CXR $\rightarrow$ ECG\\
+ECG $\rightarrow$ Lab $\rightarrow$ CXR\\
+ECG $\rightarrow$ CXR $\rightarrow$ Lab\\
+CXR $\rightarrow$ Lab $\rightarrow$ ECG\\
+CXR $\rightarrow$ ECG $\rightarrow$ Lab
+
+\vspace{0.4em}
+순서를 모두 구분하면 permutation space가 되어 탐색 비용이 커진다.
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{순열 vs 조합}
+\scriptsize
+모달리티 수 $n=5$, 동적으로 멈추는 경우
+
+\vspace{0.35em}
+\begin{center}
+\begin{tabular}{c|c|c}
+\textbf{선택 수 $k$} & \textbf{순열 $P(5,k)$} & \textbf{조합 $C(5,k)$}\\
+\hline
+1 & 5 & 5\\
+2 & 20 & 10\\
+3 & 60 & 10\\
+4 & 120 & 5\\
+5 & 120 & 1\\
+\hline
+\textbf{합계} & \textbf{325} & \textbf{31}
+\end{tabular}
+\end{center}
+
+\vspace{0.3em}
+순서를 모두 보면 325개 path를 봐야 하지만, state를 subset으로 보면 31개만 보면 된다.
+
+\vspace{0.2em}
+\textbf{약 10.5배 감소}
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\vspace{0.4em}
+\begin{block}{핵심}
+\scriptsize
+현재 환자 state가 같다면 ABC와 ACB는 같은 정보 집합을 가진다. 따라서 탐색 대상은 순열이 아니라 조합으로 줄어든다.
+\end{block}
+\end{frame}
+
+\begin{frame}{SSL for Next-Modality Simulation}
+\vspace{0.1em}
+\begin{alertblock}{Main idea}
+\small
+그럼 posterior를 어떻게 정확하게 계산해낼 것인가?
+\end{alertblock}
+
+\vspace{0.25em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{아이디어: masking 기반 생성 모듈}
+\scriptsize
+모달리티가 모두 있는 환자에서 일부 모달리티를 의도적으로 가림
+
+\vspace{0.35em}
+예시: \{Lab, Note, CXR\} $\rightarrow$ CXR mask\\
+예시: \{CT, 병리, Genomics, Clinical data\} $\rightarrow$ Genomics mask
+
+\vspace{0.45em}
+남아 있는 모달리티로 가려진 모달리티의 representation을 생성하도록 SSL 학습
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Posterior simulation}
+\scriptsize
+현재 관측된 정보 $O_t$에서 아직 없는 후보 모달리티를 하나씩 생성
+
+\vspace{0.35em}
+$q(e_{\mathrm{Lab}}\mid O_t)$, 
+$q(e_{\mathrm{CXR}}\mid O_t)$, 
+$q(e_{\mathrm{Note}}\mid O_t)$
+
+\vspace{0.45em}
+생성된 representation을 넣었을 때 diagnosis posterior 변화량을 계산
+\end{block}
+\end{column}
+\end{columns}
+
+\vspace{0.7em}
+\begin{block}{문제: 전체 path를 어떻게 효과적으로 볼 것인가}
+\scriptsize
+관측 모달리티 $\rightarrow$ 생성 모듈 $\rightarrow$ 후보 모달리티 representation 생성 $\rightarrow$ posterior 변화 계산 $\rightarrow$ 다음에 얻을 모달리티 선택
+\end{block}
+\end{frame}
+
+\end{document}

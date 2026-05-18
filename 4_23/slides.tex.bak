@@ -1,0 +1,969 @@
+% Copyright (c) 2022 by Lars Spreng
+% This work is licensed under the Creative Commons Attribution 4.0 International License.
+
+\documentclass[
+11pt,notheorems,hyperref={pdfauthor=whatever}
+]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage{kotex}
+
+\input{loadslides.tex}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds}
+
+% Reduce gap between frame title and content
+\addtobeamertemplate{frametitle}{}{\vspace{-0.5em}}
+
+\title[]{4/22 미팅}
+\subtitle{MUSE 및 ACTMED 계산 방식 정리}
+\author[]{하서준}
+\institute{DGIST}
+\date{\today}
+
+\begin{document}
+
+{
+\setbeamertemplate{footline}{}
+\begin{frame}
+  \titlepage
+\end{frame}
+}
+\addtocounter{framenumber}{-1}
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 1: Initialization
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Initialization}
+\begin{columns}[c]
+
+\begin{column}{0.54\textwidth}
+
+    \begin{block}{환자 노드 \quad $i = 1, \dots, B$}
+    \[
+        \mathbf{h}_i^{(0)} = \mathbf{1} \in \mathbb{R}^{d}
+    \]
+    \footnotesize
+    모든 값이 1인 상수 벡터 ($d=128$). 직접 학습되지 않음.\\
+    Message passing 및 노드 update 과정에서 값이 갱신됨.\\
+    최종 노드 임베딩이 classification에 사용됨.
+    \end{block}
+
+    \vspace{0.1em}
+
+    \begin{block}{Modality 노드 \quad $m \in \{1,2,3\}$}
+    \[
+        \mathbf{h}_m^{(0)} = \boldsymbol{\theta}_m \in \mathbb{R}^{d},
+        \quad \boldsymbol{\theta}_m \sim \mathcal{N}(0,1)
+    \]
+    \footnotesize
+    Modality 유형별로 하나의 학습 가능한 벡터. 모든 환자에서 공유됨.\\
+    ``이 modality가 어떤 종류인가''를 표현함.\\
+    \textcolor{gray}{(논문: OneHot($m$) $\in\mathbb{R}^3$;\; 코드: \texttt{nn.Parameter} $\in\mathbb{R}^{128}$)}
+    \end{block}
+
+    \vspace{0.1em}
+
+    \begin{block}{Edge 속성 \quad (환자 $i$ $\leftrightarrow$ modality $m$)}
+    \[
+        \mathbf{e}_{im}^{(0)} = f_m(\mathbf{x}_i) \in \mathbb{R}^{d}
+    \]
+    \footnotesize
+    Modality별 인코더 $f_m$ (FFN / RNN / Transformer)의 출력값.\\
+    환자 $i$가 modality $m$을 보유한 경우(\texttt{flag}$_{im}=1$)에만 edge 존재.\\
+    양방향 초기값 동일: $\mathbf{e}_{im}^{(0)} = \mathbf{e}_{mi}^{(0)}$
+    \textcolor{gray}{(\texttt{repeat(2,1)}).}
+    \end{block}
+
+\end{column}
+
+\begin{column}{0.42\textwidth}
+    \centering
+    \begin{tikzpicture}[
+        pnode/.style={circle, draw=blue!60, fill=blue!10,
+                      minimum size=0.72cm, font=\small, thick},
+        mnode/.style={circle, draw=orange!80, fill=orange!15,
+                      minimum size=0.72cm, font=\small, thick},
+        every label/.style={font=\scriptsize},
+        >=Stealth
+    ]
+        % patient nodes
+        \node[pnode] (p1) at (0, 3.2) {$\mathbf{1}$};
+        \node[pnode] (p2) at (0, 2.0) {$\mathbf{1}$};
+        \node[pnode] (p3) at (0, 0.8) {$\mathbf{1}$};
+        \node[left=0.05cm of p1, font=\scriptsize, blue!70] {$p_1$};
+        \node[left=0.05cm of p2, font=\scriptsize, blue!70] {$p_2$};
+        \node[left=0.05cm of p3, font=\scriptsize, blue!70] {$p_3$};
+
+        % modality nodes
+        \node[mnode] (m1) at (3.2, 3.0) {$\boldsymbol{\theta}_1$};
+        \node[mnode] (m2) at (3.2, 2.0) {$\boldsymbol{\theta}_2$};
+        \node[mnode] (m3) at (3.2, 1.0) {$\boldsymbol{\theta}_3$};
+        \node[right=0.05cm of m1, font=\scriptsize, orange!80] {$m_1$};
+        \node[right=0.05cm of m2, font=\scriptsize, orange!80] {$m_2$};
+        \node[right=0.05cm of m3, font=\scriptsize, orange!80] {$m_3$};
+
+        % edges
+        \draw[<->, thick, gray!70] (p1) -- node[above, font=\tiny, sloped]{$f_1(\mathbf{x}_1)$} (m1);
+        \draw[<->, thick, gray!70] (p1) -- (m2);
+        \draw[<->, thick, gray!70] (p2) -- (m1);
+        \draw[<->, thick, gray!70] (p2) -- (m3);
+        \draw[<->, thick, gray!70] (p3) -- (m2);
+        % p3--m1 missing
+
+        \node[font=\tiny, red!60] at (1.3, 0.2) {(edge 없음 $=$ modality 누락)};
+
+        % legend
+        \node[pnode, minimum size=0.35cm] (lp) at (0.3, -0.4) {};
+        \node[right=0.05cm of lp, font=\tiny] {환자 노드};
+        \node[mnode, minimum size=0.35cm] (lm) at (0.3, -0.9) {};
+        \node[right=0.05cm of lm, font=\tiny] {Modality 노드};
+    \end{tikzpicture}
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 2: Message Passing
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Message Passing (1 Hop)}
+\begin{columns}[c]
+
+\begin{column}{0.54\textwidth}
+
+    \begin{block}{1.\ Message 생성 \quad ($d \to d$)}
+    {\small\[
+        \mathbf{msg}_{j \to i}^{(l)}
+        = \text{ReLU}\!\left(
+            \mathbf{W}^{(l)} \mathbf{h}_j^{(l-1)}
+            + \mathbf{O}^{(l)} \mathbf{e}_{ji}^{(l-1)}
+        \right) \in \mathbb{R}^d
+    \]}
+    \footnotesize
+    Edge마다 독립적으로 message 생성:\\
+    송신 노드 $\mathbf{h}_j$ + 해당 edge 속성 $\mathbf{e}_{ji}$ → concat → Linear → ReLU.
+    \end{block}
+
+    \vspace{0.1em}
+
+    \begin{block}{2.\ Aggregation \quad ($d \to d$)}
+    {\small\[
+        \mathbf{a}_i^{(l)}
+        = \frac{1}{|\mathcal{N}(i)|}
+          \sum_{j \in \mathcal{N}(i)} \mathbf{msg}_{j \to i}^{(l)} \in \mathbb{R}^d
+    \]}
+    \footnotesize
+    이웃 $\mathcal{N}(i)$로부터 수신된 message를 mean pooling.\\
+    Modality 노드는 \emph{연결된 모든 환자}로부터 message를 수신\\
+    $\Rightarrow$ \textbf{2-hop부터 환자 간 정보 교환 발생.}
+    \end{block}
+
+    \vspace{0.1em}
+
+    \begin{block}{3.\ Update \quad ($2d \to d$, Eq.\ 7)}
+    {\small\[
+        \mathbf{h}_i^{(l)}
+        = \text{ReLU}\!\left(\mathbf{U}^{(l)}
+          \underbrace{\text{Concat}\!\left(\mathbf{h}_i^{(l-1)},\ \mathbf{a}_i^{(l)}\right)}_{\in\,\mathbb{R}^{2d}}\right) \in \mathbb{R}^d
+    \]}
+    \footnotesize
+    이전 자신의 임베딩 + aggregated 이웃 정보를 결합.
+    \textbf{모든 노드에 동시에}, \textbf{양방향으로} 적용됨. \textcolor{gray}{(ReLU는 코드에만 존재)}
+    \end{block}
+
+\end{column}
+
+\begin{column}{0.42\textwidth}
+    \centering
+    \begin{tikzpicture}[
+        pnode/.style={circle, draw=blue!60, fill=blue!10,
+                      minimum size=0.72cm, font=\small, thick},
+        mnode/.style={circle, draw=orange!80, fill=orange!15,
+                      minimum size=0.72cm, font=\small, thick},
+        >=Stealth
+    ]
+        \node[pnode] (p1) at (0, 3.4) {$p_1$};
+        \node[pnode] (p2) at (0, 1.6) {$p_2$};
+        \node[mnode] (m1) at (3.2, 2.5) {$m_1$};
+
+        \draw[->, thick, blue!60, bend left=15]
+            (p1) to node[above, sloped, font=\tiny]{msg} (m1);
+        \draw[->, thick, blue!60, bend right=15]
+            (p2) to node[below, sloped, font=\tiny]{msg} (m1);
+        \draw[->, thick, orange!70, bend right=15]
+            (m1) to node[above, sloped, font=\tiny]{msg} (p1);
+        \draw[->, thick, orange!70, bend left=15]
+            (m1) to node[below, sloped, font=\tiny]{msg} (p2);
+
+        \node[draw=orange!50, fill=orange!5, rounded corners,
+              font=\tiny, text width=2.2cm, align=center]
+            at (3.2, 0.8)
+            {$p_1$, $p_2$ message\\mean pooling\\
+             \textcolor{red!70}{\textbf{환자 간 정보 혼합}}};
+        \draw[->, dashed, orange!50] (3.2, 1.15) -- (m1);
+    \end{tikzpicture}
+
+    \vspace{0.6em}
+    \begin{tikzpicture}
+    \node[draw=gray!40, rounded corners, fill=gray!5,
+          font=\scriptsize, text width=4.2cm]{
+        \textbf{1-hop}: 각 환자가 자신의\\
+        \quad modality 정보를 흡수\\[0.3em]
+        \textbf{2-hop}: 각 환자가 다른 환자의\\
+        \quad 정보를 흡수\\
+        \quad (modality 노드를 통해 전달)
+    };
+    \end{tikzpicture}
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 3: Edge Update
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Edge Update}
+\begin{columns}[c]
+
+\begin{column}{0.52\textwidth}
+
+    \textbf{각 hop 완료 후} (마지막 hop 제외), 모든 edge 속성 갱신:
+    \[
+        \mathbf{e}_{ji}^{(l)}
+        = \text{ReLU}\!\left(\mathbf{P}^{(l)}
+          \underbrace{\text{Concat}\!\left(
+            \mathbf{h}_j^{(l)},\ \mathbf{h}_i^{(l)},\ \mathbf{e}_{ji}^{(l-1)}
+          \right)}_{\in\,\mathbb{R}^{3d}}\right) \in \mathbb{R}^d
+    \]
+    \footnotesize
+    송신 노드 $j$ + 수신 노드 $i$ 임베딩 + 이전 edge 속성\\
+    $\xrightarrow{\mathbf{P}^{(l)}\,\in\,\mathbb{R}^{d\times 3d}}$ 새 edge 속성.\\
+    \textcolor{gray}{코드: 현재 hop의 $\mathbf{h}^{(l)}$ 사용; 논문 Eq.\ 8은 $\mathbf{h}^{(l-1)}$ 사용. ReLU는 코드에만 존재.}
+
+    \vspace{0.5em}
+    \normalsize
+    \begin{itemize}\itemsep0.3em
+        \item \textbf{비대칭성}: 1-hop 이후 $\mathbf{e}_{ji}^{(l)} \neq \mathbf{e}_{ij}^{(l)}$\\
+              \footnotesize 송신/수신 순서가 달라 concat 입력이 달라짐
+        \normalsize
+        \item 갱신된 edge 속성은 \textbf{다음 hop의} message 생성에 입력으로 사용됨
+    \end{itemize}
+
+    \vspace{0.4em}
+    \begin{tikzpicture}
+    \node[draw=gray!40, rounded corners, fill=gray!5,
+          font=\scriptsize, text width=5.2cm]{
+        \textbf{초기 (hop 0)}: $\mathbf{e}_{ij}^{(0)} = \mathbf{e}_{ji}^{(0)} = f_m(\mathbf{x}_i)$\quad(대칭)\\[0.3em]
+        \textbf{hop 1 이후}: $\mathbf{e}_{ij}^{(1)} \neq \mathbf{e}_{ji}^{(1)}$\quad(비대칭)
+    };
+    \end{tikzpicture}
+
+\end{column}
+
+\begin{column}{0.44\textwidth}
+    \centering
+    \begin{tikzpicture}[
+        pnode/.style={circle, draw=blue!60, fill=blue!10,
+                      minimum size=0.80cm, font=\small, thick},
+        mnode/.style={circle, draw=orange!80, fill=orange!15,
+                      minimum size=0.80cm, font=\small, thick},
+        >=Stealth
+    ]
+        \node[pnode] (p) at (0, 2.2) {$p_i$};
+        \node[mnode] (m) at (4.0, 2.2) {$m_j$};
+
+        \draw[->, bend left=30, thick, blue!60]
+            (p) to node[above, font=\scriptsize]{$\mathbf{e}_{ij}^{(l)}$} (m);
+        \draw[->, bend left=30, thick, orange!70]
+            (m) to node[below, font=\scriptsize]{$\mathbf{e}_{ji}^{(l)}$} (p);
+
+        \node[font=\scriptsize, text width=3.8cm, align=center,
+              draw=gray!30, rounded corners, fill=gray!5]
+            at (2.0, 0.8)
+            {반대 방향에 대해\\각각 \textbf{별도의} edge 벡터 존재};
+    \end{tikzpicture}
+
+    \vspace{0.8em}
+    \begin{tikzpicture}[>=Stealth]
+    \node[font=\scriptsize, text width=4.4cm, align=left,
+          draw=gray!40, rounded corners, fill=gray!5]{
+        \textbf{비대칭성이 중요한 이유:}\\[0.3em]
+        $p_i \!\to\! m_j$: 환자 $i$의\\
+        \quad modality별 임상 특징 인코딩\\[0.3em]
+        $m_j \!\to\! p_i$: $m_j$에 연결된\\
+        \quad 모든 환자의 aggregated 신호 인코딩
+    };
+    \end{tikzpicture}
+\end{column}
+
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 4: Modality Encoder
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{MUSE의 Modality Encoder}
+
+\begin{table}[]
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{Modality} & \textbf{입력} & \textbf{Encoder} & \textbf{출력} \\
+\midrule
+의료 코드 & ICD 진단/시술/ & Transformer & \multirow{2}{*}{128차원} \\
+          & 처방 코드 ID & (처음부터 학습) & \\
+\midrule
+검사 수치  & 114개 검사 항목 & 양방향 & \multirow{2}{*}{128차원} \\
+          & 시계열 데이터  & GRU    & \\
+\midrule
+임상 노트 & 퇴원 요약문 & Bio\_ClinicalBERT & \multirow{2}{*}{128차원} \\
+          &            & (frozen)         & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.5em}
+
+\begin{block}{주요 설계 선택}
+\begin{itemize}
+    \item 코드 임베딩은 Bio\_ClinicalBERT로 인코딩된 코드 설명으로 초기화 (frozen lookup)
+    \item 임상 노트 encoder는 완전히 frozen; 코드 Transformer는 end-to-end로 fine-tuning
+    \item 모든 modality는 GNN 입력 전에 동일한 128차원 공간으로 투영됨
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 5: Batch Size and Graph Size
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Batch 크기에 따라 Bipartite Graph 크기 변화}
+\begin{columns}[c]
+
+\begin{column}{0.45\textwidth}
+    \begin{block}{Batch당 그래프 구조}
+    \begin{itemize}
+        \item \textbf{환자 노드}: $B$개 (= batch 크기)
+        \item \textbf{Modality 노드}: 3개 (고정)
+        \item \textbf{Edge}: 최대 $3B$개 (보유 modality당 1개)
+    \end{itemize}
+    \end{block}
+
+    \vspace{0.5em}
+
+    \begin{tikzpicture}
+    \node[draw=gray!40, rounded corners, fill=gray!5,
+          font=\scriptsize, text width=5.0cm]{
+        \textbf{Batch 크기 = 1} \quad $\Rightarrow$ 환자 노드 1개\\[0.3em]
+        \textbf{Batch 크기 = 512} $\Rightarrow$ 환자 노드 512개\\[0.3em]
+        Modality 노드는 항상 \textbf{3개} 고정\\[0.3em]
+        $\therefore$ Batch가 클수록 modality 노드를\\
+        \quad 통한 환자 간 정보 교환이 풍부해짐
+    };
+    \end{tikzpicture}
+\end{column}
+
+\begin{column}{0.52\textwidth}
+\centering
+\begin{tikzpicture}[
+    pnode/.style={circle, draw=blue!60, fill=blue!10,
+                  minimum size=0.55cm, font=\tiny, thick},
+    mnode/.style={circle, draw=orange!80, fill=orange!15,
+                  minimum size=0.55cm, font=\tiny, thick},
+    >=Stealth
+]
+
+% --- batch=1 (top) ---
+\node[font=\scriptsize\bfseries, blue!70] at (2.2, 5.2) {Batch = 1};
+\node[pnode] (b1p1) at (0.8, 4.4) {$p_1$};
+\node[mnode] (b1m1) at (3.6, 4.8) {$m_1$};
+\node[mnode] (b1m2) at (3.6, 4.2) {$m_2$};
+\node[mnode] (b1m3) at (3.6, 3.6) {$m_3$};
+\draw[gray!60, thick] (b1p1) -- (b1m1);
+\draw[gray!60, thick] (b1p1) -- (b1m2);
+\draw[gray!60, thick] (b1p1) -- (b1m3);
+
+% divider
+\draw[dashed, gray!40] (0, 3.1) -- (4.8, 3.1);
+
+% --- batch=4 (bottom) ---
+\node[font=\scriptsize\bfseries, blue!70] at (2.2, 2.8) {Batch = 4};
+\node[pnode] (b4p1) at (0.8, 2.2) {$p_1$};
+\node[pnode] (b4p2) at (0.8, 1.4) {$p_2$};
+\node[pnode] (b4p3) at (0.8, 0.6) {$p_3$};
+\node[pnode] (b4p4) at (0.8,-0.2) {$p_4$};
+\node[mnode] (b4m1) at (3.6, 1.8) {$m_1$};
+\node[mnode] (b4m2) at (3.6, 0.8) {$m_2$};
+\node[mnode] (b4m3) at (3.6,-0.2) {$m_3$};
+\draw[gray!60] (b4p1) -- (b4m1);
+\draw[gray!60] (b4p1) -- (b4m2);
+\draw[gray!60] (b4p2) -- (b4m1);
+\draw[gray!60] (b4p2) -- (b4m3);
+\draw[gray!60] (b4p3) -- (b4m2);
+\draw[gray!60] (b4p3) -- (b4m3);
+\draw[gray!60] (b4p4) -- (b4m1);
+\draw[gray!60] (b4p4) -- (b4m2);
+
+\end{tikzpicture}
+\end{column}
+
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 6: Experiment 1
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{Experiment 1: Batch 크기가 추론 성능에 미치는 영향}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{result.png}
+        \caption{Batch 크기에 따른 테스트셋 성능 (MIMIC-IV, 사망률 예측)}
+        \label{fig:batch_effect}
+    \end{figure}
+    \begin{itemize}
+        \item 동일한 checkpoint에서 batch 크기 512 vs.\ 1 비교 시
+              $\Delta\text{AUROC} \approx 0.000$, $\Delta\text{PR-AUC} \approx 0.000$
+              (모든 modality 누락 그룹에서 동일)
+
+        \item \textbf{원인}: 환자 노드가 동일한 $\mathbf{1} \in \mathbb{R}^{d}$로 초기화되므로,
+              환자들이 modality 노드로 보내는 message는
+              edge 속성 $\mathbf{e}_{im}$의 batch 평균으로 수렴함.
+              Batch 크기가 달라도 이 평균의 차이가 미미하여
+              환자별 예측 \emph{순위}에 영향을 주지 못함.
+              \textcolor{gray}{(AUROC는 순위 기반 지표)}
+
+        \item MUSE는 단일 환자 추론 환경에서도
+              \textbf{성능 저하 없음} $\Rightarrow$ 임상 배포 적합성 확인
+    \end{itemize}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 1: 문제 제기
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{문제 제기: 기존 방법의 한계}
+\begin{columns}[c]
+
+\begin{column}{0.48\textwidth}
+    \begin{block}{임상 현실}
+    \begin{itemize}\itemsep0.3em
+        \item 진단은 본질적으로 \textbf{순차적}이고 \textbf{단계적}
+        \item 검사마다 비용, 시간, 환자 부담 발생
+        \item 불필요한 검사가 전체의 \textbf{40--60\%}로 추정
+        \item WHO: 2035년까지 의료인력 \textbf{1,200만 명} 부족
+    \end{itemize}
+    \end{block}
+
+    \vspace{0.4em}
+
+    \begin{alertblock}{문제}
+    \small
+    기존 ML 모델은 \textbf{모든 데이터가 주어진다고 가정}하고 진단을 \textbf{정적 분류 문제}로 다룸 --- 실제 임상 추론의 순차적·자원 인식적 특성을 반영하지 못함.
+    \end{alertblock}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+    \begin{block}{기존 방법의 전형적 한계}
+    \footnotesize
+    \begin{tabular}{lccc}
+        \toprule
+        방법 & 순차적 & 개인 맞춤 & 투명성 \\
+        \midrule
+        Rule-based      & \textcolor{red}{\texttimes} & \textcolor{red}{\texttimes}  & \textcolor{green!60!black}{\checkmark} \\
+        Classical ML    & \textcolor{red}{\texttimes} & \textcolor{red}{\texttimes}  & \textcolor{red}{\texttimes} \\
+        Deep Learning   & \textcolor{red}{\texttimes} & \textcolor{red}{\texttimes}  & \textcolor{red}{\texttimes} \\
+        Na\"ive LLM     & \textcolor{green!60!black}{\checkmark} & \textcolor{red}{\texttimes}  & \textcolor{red}{\texttimes} \\
+        \textbf{ACTMED} & \textcolor{green!60!black}{\checkmark} & \textcolor{green!60!black}{\checkmark} & \textcolor{green!60!black}{\checkmark} \\
+        \bottomrule
+    \end{tabular}\\[0.3em]
+    \textcolor{gray}{\tiny 대부분의 기존 방법은 위 세 가지 중 하나 이상을 충족하지 못함.}
+    \end{block}
+
+    \vspace{0.3em}
+
+    \begin{block}{Na\"ive LLM의 문제}
+    \footnotesize
+    \begin{itemize}
+        \item 확률적 추론이 약함
+        \item 모든 환자에게 \textbf{동일한 검사} 추천 (개인화 불가)
+        \item 블랙박스: 추론 과정 불투명
+    \end{itemize}
+    \end{block}
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 2: 핵심 아이디어
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{핵심 아이디어}
+\begin{columns}[c]
+
+\begin{column}{0.54\textwidth}
+
+    \begin{block}{핵심 아이디어}
+    \small
+    \textbf{Bayesian Experimental Design (BED)} + \textbf{LLM}을 결합하여 실제 임상 추론을 모방.\\[0.4em]
+    \footnotesize
+    LLM의 강점(의학 지식)으로 검사 결과를 시뮬레이션하고,\\
+    BED의 수학적 엄밀성으로 최적 검사를 선택.
+    \end{block}
+
+    \vspace{0.4em}
+
+    \begin{block}{BED란?}
+    \footnotesize
+    \textit{``비용 대비 가장 많은 정보를 주는 검사는?''}\\[0.3em]
+    \[
+        i^* = \arg\max_i \ F(U^{(i)}_t), \quad
+        F = \frac{\mathbb{E}[\text{KL}(\mathbb{B}(p_{\text{post}}) \| \mathbb{B}(p_{\text{prior}}))]}{c(U^{(i)}_t)}
+    \]
+    \textbf{비용 대비 정보량}이 가장 큰 검사를 선택.
+    \end{block}
+
+    \vspace{0.4em}
+
+    \begin{block}{LLM의 역할}
+    \footnotesize
+    \begin{itemize}
+        \item 분류기(classifier)가 \textbf{아님}
+        \item \textbf{서로게이트 샘플러}: 가상 검사 결과 생성
+        \item $u^{(i,j)}_t \sim P(U^{(i)}_t \mid K_t)$ --- 태스크별 학습 불필요
+    \end{itemize}
+    \end{block}
+
+\end{column}
+
+\begin{column}{0.42\textwidth}
+    \centering
+    \begin{tikzpicture}[
+        box/.style={draw=blue!50, fill=blue!5, rounded corners,
+                    font=\scriptsize, text width=2.8cm, align=center,
+                    minimum height=0.7cm},
+        llmbox/.style={draw=orange!70, fill=orange!10, rounded corners,
+                    font=\scriptsize, text width=2.8cm, align=center,
+                    minimum height=0.7cm},
+        >=Stealth
+    ]
+        \node[box] (kt) at (0, 4.5) {환자 정보 $K_t$};
+        \node[llmbox] (prior) at (0, 3.4) {LLM\\Prior $p_{\text{prior}}$};
+        \node[llmbox] (sim) at (0, 2.3) {LLM\\검사 결과 시뮬레이션};
+        \node[llmbox] (post) at (0, 1.2) {LLM\\Posterior $p_{\text{post}}$};
+        \node[box] (kl) at (0, 0.1) {KL $\to$ 검사 $i^*$ 선택};
+        \node[box] (obs) at (0, -1.0) {실제 결과 획득\\$K_{t+1}$ 업데이트};
+
+        \draw[->, thick] (kt) -- (prior);
+        \draw[->, thick] (prior) -- (sim);
+        \draw[->, thick] (sim) -- (post);
+        \draw[->, thick] (post) -- (kl);
+        \draw[->, thick] (kl) -- (obs);
+        \draw[->, thick, dashed, gray] (obs.east) -- ++(0.6,0)
+            -- ++(0, 2.0) -- ++(-0.6, 0) -- (kt.east);
+
+        \node[font=\tiny, gray] at (1.6, 0.5) {반복};
+    \end{tikzpicture}
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 3: 작동 방식
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{작동 방식 (Figure 2)}
+\begin{columns}[c]
+
+\begin{column}{0.50\textwidth}
+    \textbf{단계별 절차:}\\[0.5em]
+    \footnotesize
+    \begin{enumerate}\itemsep0.4em
+        \item[\textbf{1.}] 임상의가 환자 정보 $K_t$ 입력
+        \item[\textbf{2.}] LLM이 prior 추정: $p_{\text{prior}} = P(y_{d_t}=1 \mid K_t)$
+        \item[\textbf{3.}] 각 후보 검사 $U^{(i)}_t$마다\\
+              LLM이 $M$개 가상 결과 $u^{(i,j)}_t$ 생성
+        \item[\textbf{4.}] 각 가상 결과에서\\
+              LLM이 업데이트된 질병 확률 $p^{(j)}_{\text{post}}$ 추정
+        \item[\textbf{5.}] 기대 KL divergence 계산:\\
+              $\mathbb{E}[\text{KL}(\mathbb{B}(p_{\text{post}}) \| \mathbb{B}(p_{\text{prior}}))]$
+        \item[\textbf{6.}] $i^* = \arg\max_i \ F(U^{(i)}_t)$ 선택
+        \item[\textbf{7.}] 임상의가 검토 후 실제 검사 시행
+        \item[\textbf{8.}] $K_{t+1} \leftarrow K_t \cup \{\hat{u}^{(i^*)}_t\}$,\\
+              확신될 때까지 반복
+    \end{enumerate}
+\end{column}
+
+\begin{column}{0.46\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \node[draw=gray!40, rounded corners, fill=gray!5,
+          font=\scriptsize, text width=4.8cm, minimum height=5.5cm,
+          align=center]{
+        \textbf{[Figure 2 삽입]}\\[0.5em]
+        \textcolor{gray}{논문 Figure 2\\(ACTMED 전체 파이프라인)}
+    };
+    \end{tikzpicture}
+
+    \vspace{0.3em}
+    \begin{tikzpicture}
+    \node[draw=blue!30, rounded corners, fill=blue!5,
+          font=\scriptsize, text width=4.8cm]{
+        \textbf{다음 논문과 비교:}\\
+        ACTMED는 \textbf{Active Feature Acquisition} ---\\
+        \textit{어떤 검사 항목}을 볼지 선택,\\
+        \textit{어떤 모달리티}(영상/텍스트/혈액)를\\
+        선택하는 것과는 다름.
+    };
+    \end{tikzpicture}
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 4: 왜 KL인가
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{왜 KL Divergence인가? (Figure 1)}
+\begin{columns}[c]
+
+\begin{column}{0.50\textwidth}
+
+    \begin{block}{엔트로피 기반 선택의 문제}
+    \footnotesize
+    $p_{\text{prior}} = 0.1$ (질병 확률 낮음)인 경우:\\[0.3em]
+    \begin{itemize}
+        \item \textbf{유용한 검사}: $p_{\text{post}} \to 0.7$ \quad (엔트로피 \textit{증가})
+        \item \textbf{쓸모없는 검사}: $p_{\text{post}} \approx 0.1$ \quad (엔트로피 낮게 유지)
+    \end{itemize}
+    \vspace{0.2em}
+    $\Rightarrow$ 엔트로피 기준은 \textbf{쓸모없는 검사를 잘못 선호}!
+    \end{block}
+
+    \vspace{0.3em}
+
+    \begin{block}{KL Divergence의 해결}
+    \footnotesize
+    \begin{itemize}
+        \item \textbf{믿음 변화의 크기}를 직접 측정
+        \item 방향 무관 (올라가든 내려가든)
+        \item $\Delta p$ 클수록 $\Rightarrow$ KL 큼 $\Rightarrow$ 유용한 검사
+    \end{itemize}
+    \vspace{0.2em}
+    \[
+        F(U^{(i)}_t) = \frac{\mathbb{E}[\text{KL}(\mathbb{B}(p_{\text{post}}) \| \mathbb{B}(p_{\text{prior}}))]}{c(U^{(i)}_t)}
+    \]
+    \end{block}
+
+\end{column}
+
+\begin{column}{0.46\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \node[draw=gray!40, rounded corners, fill=gray!5,
+          font=\scriptsize, text width=4.8cm, minimum height=4.0cm,
+          align=center]{
+        \textbf{[Figure 1 삽입]}\\[0.5em]
+        \textcolor{gray}{논문 Figure 1\\(KL 기반 검사 선택 illustration)}
+    };
+    \end{tikzpicture}
+
+    \vspace{0.4em}
+
+    \begin{tikzpicture}
+    \node[draw=gray!40, rounded corners, fill=gray!5,
+          font=\scriptsize, text width=4.8cm]{
+        \textbf{A}: Prior vs 실제 분포\\
+        \textbf{B}: 각 검사별 샘플링된 posterior들\\
+        \textbf{C}: KL 최대 검사 선택 $\to$ 믿음 업데이트
+    };
+    \end{tikzpicture}
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 5: LLM의 역할
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{LLM의 역할: 서로게이트 샘플러}
+\begin{columns}[c]
+
+\begin{column}{0.54\textwidth}
+
+    \begin{block}{왜 수식 모델이 아닌가?}
+    \footnotesize
+    공학/물리학에서 BED는 닫힌 형태의 수식 사용.\\[0.3em]
+    의료에서는: 생리학적 변수들이 \textbf{비선형, 고차원, 부분 관측}
+    $\Rightarrow$ 직접 모델링 \textbf{불가}.
+    \end{block}
+
+    \vspace{0.3em}
+
+    \begin{block}{LLM을 서로게이트로}
+    \footnotesize
+    LLM은 대규모 의학 문헌에서 의학 지식을 학습.\\[0.3em]
+    $K_t$를 프롬프트로 받아 \textbf{조건부 샘플러}처럼 작동:
+    \[
+        u^{(i,j)}_t \sim P(U^{(i)}_t \mid K_t)
+    \]
+    태스크별 학습 불필요 (제로샷).
+    \end{block}
+
+    \vspace{0.3em}
+
+    \begin{block}{환각(Hallucination) 완화}
+    \footnotesize
+    \begin{enumerate}\itemsep0.2em
+        \item 구조화된 임상 요약문(vignette) 프롬프트
+        \item Temperature $= 1$ (다양성 확보)
+        \item 질병 있음/없음 \textbf{양쪽 모두} 고려하도록 지시
+            \textcolor{gray}{--- 가장 효과적인 전략}
+    \end{enumerate}
+    \end{block}
+
+\end{column}
+
+\begin{column}{0.42\textwidth}
+
+    \begin{block}{LLM이 하는 세 가지}
+    \footnotesize
+    \begin{tabular}{ll}
+        \toprule
+        역할 & 출력 \\
+        \midrule
+        Prior 추정    & $p_{\text{prior}} \in [0,1]$ \\
+        검사 결과 생성 & $u^{(i,j)}_t \in \mathbb{R}$ \\
+        Posterior 추정 & $p_{\text{post}} \in [0,1]$ \\
+        \bottomrule
+    \end{tabular}
+    \end{block}
+
+    \vspace{0.4em}
+
+    \begin{block}{KL 계산은 코드로}
+    \footnotesize
+    \[
+        \mathbb{E}[\text{KL}] = \frac{1}{M}\sum_{j=1}^{M}
+        \left[
+        p^{(j)}_{\text{post}} \log \frac{p^{(j)}_{\text{post}}}{p_{\text{prior}}}
+        + (1-p^{(j)}_{\text{post}}) \log \frac{1-p^{(j)}_{\text{post}}}{1-p_{\text{prior}}}
+        \right]
+    \]
+    \end{block}
+
+    \vspace{0.3em}
+
+    \begin{alertblock}{주의}
+    \footnotesize
+    프레임워크 품질은 \textbf{LLM 품질에 완전 종속}.\\
+    GPT-4o급 필요; 작은 모델은 실패.
+    \end{alertblock}
+
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 6: 실험 설정
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{실험 설정}
+\begin{columns}[c]
+
+\begin{column}{0.50\textwidth}
+
+    \begin{block}{데이터셋}
+    \footnotesize
+    \begin{tabular}{llc}
+        \toprule
+        데이터셋 & 태스크 & 환자 수 \\
+        \midrule
+        CKD       & 신장 질환   & 157 \\
+        Hepatitis & C형 간염    & 112 \\
+        Diabetes  & 당뇨        & 100 \\
+        OSCE      & 다중 질환   & 114$\times$2\textsuperscript{*} \\
+        \bottomrule
+    \end{tabular}\\[0.3em]
+    \footnotesize
+    \textsuperscript{*}실제 케이스 + 합성 음성 대조군\\
+    모두 이진 분류, 구조화된 혈액 검사값만 사용\\
+    $\Rightarrow$ \textbf{Active Feature Acquisition} 설정
+    \end{block}
+
+    \vspace{0.4em}
+
+    \begin{block}{실험 조건}
+    \footnotesize
+    \begin{itemize}
+        \item 환자당 최대 \textbf{검사 3개} 제한
+        \item 모든 검사 비용 동일 가정
+        \item 5개 랜덤 시드, 평균 $\pm$ 표준편차 보고
+    \end{itemize}
+    \end{block}
+
+\end{column}
+
+\begin{column}{0.46\textwidth}
+
+    \begin{block}{비교 대상 (Baselines)}
+    \footnotesize
+    \begin{tabular}{lp{3.8cm}}
+        \toprule
+        방법 & 설명 \\
+        \midrule
+        All Features & 제한 없이 전체 사용 (상한) \\
+        Random       & 3개 무작위 선택 \\
+        Global Best  & 사전에 정해진 최적 3개 (가이드라인 모방) \\
+        Implicit     & BED 없이 LLM이 직접 선택 \\
+        \textbf{ACTMED} & \textbf{BED + LLM (제안)} \\
+        \bottomrule
+    \end{tabular}
+    \end{block}
+
+    \vspace{0.4em}
+
+    \begin{block}{사용 모델}
+    \footnotesize
+    \begin{itemize}
+        \item GPT-4o
+        \item GPT-4o-mini
+        \item BioMistral-7B \textcolor{gray}{(실패 사례)}
+        \item LLaMA-70B \textcolor{gray}{(실패 사례)}
+    \end{itemize}
+    \end{block}
+
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 7: 실험 결과
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{실험 결과}
+\begin{columns}[c]
+
+\begin{column}{0.50\textwidth}
+
+    \begin{block}{H1: LLM이 현실적인 분포를 샘플링하는가}
+    \footnotesize
+    Wasserstein distance (낮을수록 좋음):\\[0.3em]
+    \begin{tabular}{llc}
+        \toprule
+        데이터셋 & 모델 & Wasserstein \\
+        \midrule
+        Diabetes  & GPT-4o & 0.110 \\
+        Hepatitis & GPT-4o & 0.130 \\
+        Kidney    & GPT-4o & 0.082 \\
+        \bottomrule
+    \end{tabular}\\[0.3em]
+    LLM이 생리학적으로 타당한 샘플을 생성함.
+    \end{block}
+
+    \vspace{0.3em}
+
+    \begin{alertblock}{핵심 결과 (H2)}
+    \footnotesize
+    \begin{itemize}
+        \item \textbf{ACTMED $>$ All Features} (Hepatitis, Diabetes)\\
+              \textcolor{gray}{$\to$ 검사 3개만으로 전체보다 정확}
+        \item 목표 지향적 선택이 \textbf{노이즈를 줄임}
+        \item GPT-4o $>$ GPT-4o-mini (어려운 태스크일수록)
+    \end{itemize}
+    \end{alertblock}
+
+\end{column}
+
+\begin{column}{0.46\textwidth}
+
+    \begin{tikzpicture}
+    \node[draw=gray!40, rounded corners, fill=gray!5,
+          font=\scriptsize, text width=4.8cm, minimum height=2.8cm,
+          align=center]{
+        \textbf{[Figure 4 삽입]}\\[0.3em]
+        \textcolor{gray}{방법별·데이터셋별 정확도 비교}
+    };
+    \end{tikzpicture}
+
+    \vspace{0.3em}
+
+    \begin{block}{개인화 (Figure 6)}
+    \footnotesize
+    Implicit은 항상 \textbf{전역 최적 검사}만 선택.\\
+    ACTMED는 \textbf{환자별로 다른} 검사를 선택.
+    \end{block}
+
+    \vspace{0.3em}
+
+    \begin{block}{조기 종료 (Table 3)}
+    \footnotesize
+    KL 기반 조기 종료로 검사 수 \textbf{약 50\% 절감},\\
+    정확도는 동등하거나 향상.\\[0.2em]
+    임상의 \textbf{94.5\%}가 검사 추천을 임상적으로 타당하다고 평가.
+    \end{block}
+
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+% FRAME 8: 한계 + 핵심 메시지
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{frame}{한계 및 핵심 메시지}
+\begin{columns}[c]
+
+\begin{column}{0.48\textwidth}
+
+    \begin{alertblock}{한계}
+    \footnotesize
+    \begin{itemize}\itemsep0.4em
+        \item \textbf{데이터 규모}: 전체 약 1,000명\\
+              \textcolor{gray}{실제 임상 적용 전 대규모 검증 필요}
+        \item \textbf{이진 분류만 가능}: 복수 질환·동반 질환 미지원
+        \item \textbf{Feature 수준만}: 모달리티 선택 불가\\
+              \textcolor{gray}{(영상, 자유 텍스트, 유전체 미지원)}
+        \item \textbf{고성능 LLM 의존}: GPT-4o급 필수;\\
+              소형 모델 사용 시 프레임워크 전체 실패
+    \end{itemize}
+    \end{alertblock}
+
+\end{column}
+
+\begin{column}{0.48\textwidth}
+
+    \begin{block}{장점}
+    \footnotesize
+    \begin{itemize}\itemsep0.3em
+        \item 임상 진단에 BED를 최초 적용
+        \item 태스크별 재학습 불필요 (제로샷)
+        \item 단계별 투명한 추론 과정
+        \item 임상의가 매 단계 검토·개입 가능
+        \item 비용 인식적 검사 선택
+    \end{itemize}
+    \end{block}
+
+    \vspace{0.4em}
+
+    \begin{block}{핵심 메시지}
+    \small
+    ACTMED는 임상 진단을 \textbf{순차적 의사결정 문제}로 재정의.\\[0.4em]
+    LLM이 BED의 \textbf{서로게이트}로 작동하여, 재학습 없이 환자별 최적 검사를 선택.\\[0.4em]
+    \textcolor{gray}{현재 LLM은 자율 진단에는 \textbf{준비되지 않았지만}, 임상의를 의미있게 \textbf{보조}할 수 있음.}
+    \end{block}
+
+\end{column}
+
+\end{columns}
+\end{frame}
+
+
+\end{document}

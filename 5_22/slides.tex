@@ -1,0 +1,525 @@
+% Copyright (c) 2022 by Lars Spreng
+% This work is licensed under the Creative Commons Attribution 4.0 International License.
+
+\documentclass[
+11pt,notheorems,hyperref={pdfauthor=whatever}
+]{beamer}
+
+\usepackage{kotex}
+\input{loadslides.tex}
+
+\usepackage{fontspec}
+\setmainhangulfont{Noto Sans CJK KR}
+\setsanshangulfont{Noto Sans CJK KR}
+\setmonohangulfont{Noto Sans Mono CJK KR}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, calc, shapes.geometric}
+
+\addtobeamertemplate{frametitle}{}{\vspace{-0.5em}}
+
+\newcommand{\smallgray}[1]{{\scriptsize\textcolor{gray!75}{#1}}}
+\newcommand{\tagbox}[1]{\colorbox{gray!12}{\strut\scriptsize #1}}
+\newcommand{\yes}{\textcolor{green!45!black}{Yes}}
+\newcommand{\no}{\textcolor{red!65!black}{No}}
+
+\title[]{MIMIC-CDM 기반 Sequential Clinical Diagnosis 연구 동향}
+\subtitle{Path Supervision과 Stopping 문제를 중심으로}
+\author[]{하서준}
+\institute{DGIST}
+\date{2026년 5월 22일}
+
+\begin{document}
+
+{
+\setbeamertemplate{footline}{}
+\begin{frame}
+  \titlepage
+  \vspace{-0.8em}
+  \begin{center}
+  \scriptsize
+  LA-CDM · LDTL · SIFT · CaRT · MIMIC-CDM
+  \end{center}
+\end{frame}
+}
+\addtocounter{framenumber}{-1}
+
+\begin{frame}{오늘의 질문}
+\vspace{0.2em}
+\begin{block}{Sequential diagnosis에서 진짜 어려운 부분}
+\small
+정답 diagnosis label은 있지만, \textbf{좋은 diagnostic path label은 없다.}
+\end{block}
+
+\vspace{0.4em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{모델이 결정해야 하는 것}
+\scriptsize
+\begin{itemize}
+  \item 다음에 어떤 evidence를 얻을 것인가?
+  \item 현재 정보로 충분한가?
+  \item 언제 멈추고 진단할 것인가?
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{하지만 supervised label은 없음}
+\scriptsize
+\begin{itemize}
+  \item clinician path가 항상 optimal은 아님
+  \item retrospective record는 missingness가 큼
+  \item terminal diagnosis만으로는 credit assignment가 약함
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\vspace{0.6em}
+\centering
+\small
+\textbf{이 분야의 핵심은 ``path supervision을 어떻게 만들 것인가''로 이동 중}
+\end{frame}
+
+\begin{frame}{Survey Map}
+\vspace{-0.1em}
+\begin{center}
+\begin{tikzpicture}[
+  paper/.style={draw, rounded corners=2pt, fill=white, align=center, minimum width=2.75cm, minimum height=0.82cm, font=\scriptsize},
+  root/.style={paper, fill=gray!10, minimum width=3.25cm},
+  hub/.style={paper, fill=blue!7, minimum width=3.05cm},
+  axis/.style={font=\scriptsize\bfseries, text=gray!75}
+]
+\node[root] (data) at (0,0) {MIMIC-CDM\\\smallgray{dataset paper / benchmark}};
+\node[hub] (lacdm) at (0,-1.35) {LA-CDM\\\smallgray{ICLR 2026 accepted}};
+\node[paper, fill=green!7] (ldtl) at (-3.2,-3.05) {LDTL\\\smallgray{preprint}};
+\node[paper, fill=orange!9] (sift) at (0,-3.05) {SIFT\\\smallgray{preprint}};
+\node[paper, fill=purple!8] (cart) at (3.2,-3.05) {CaRT\\\smallgray{ICLR 2026 rejected}};
+
+\draw[-{Latex[length=2.3mm]}, thick] (data) -- (lacdm);
+\draw[-{Latex[length=2.3mm]}, thick] (lacdm) -- (ldtl);
+\draw[-{Latex[length=2.3mm]}, thick] (lacdm) -- (sift);
+\draw[-{Latex[length=2.3mm]}, thick] (lacdm) -- (cart);
+\node[axis, above=0.18cm of data] {MIMIC-CDM creates the benchmark setting};
+\node[axis, below=0.18cm of sift] {After LA-CDM: dense path supervision and stopping become the main pressure points};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.25em}
+\begin{block}{읽는 순서}
+\scriptsize
+\textbf{MIMIC-CDM}이 sequential diagnosis benchmark를 만들고, \textbf{LA-CDM}이 같은 판에서 RL 기반 학습을 accepted paper로 제시했다. 이후 \textbf{LDTL}, \textbf{SIFT}, \textbf{CaRT}는 각각 local information gain, critical fact reward, termination supervision으로 path-label 부재를 우회한다.
+\end{block}
+\end{frame}
+
+\begin{frame}{MIMIC-CDM: 이 판을 가능하게 만든 Benchmark}
+\vspace{0.15em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.50\textwidth}
+\begin{block}{제공하는 것}
+\scriptsize
+\begin{itemize}
+  \item MIMIC-IV 기반 abdominal pathology cases
+  \item history, physical exam, labs, imaging reports
+  \item sequential test request 환경
+  \item final diagnosis label
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.46\textwidth}
+\begin{alertblock}{제공하지 않는 것}
+\scriptsize
+\begin{itemize}
+  \item optimal test sequence
+  \item stopping label
+  \item counterfactual test results
+  \item broad disease coverage
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\vspace{0.5em}
+\begin{block}{중요한 해석}
+\small
+MIMIC-CDM은 real EHR 기반 sequential diagnosis benchmark라는 점에서 중요하지만, 동시에 현재 연구들의 한계도 만든다: \textbf{retrospective data, unavailable tests, narrow disease scope, missing path labels}.
+\end{block}
+\end{frame}
+
+\begin{frame}{공통 문제: Path Label이 없다}
+\vspace{0.2em}
+\begin{center}
+\begin{tikzpicture}[
+  state/.style={draw, rounded corners=2pt, fill=blue!6, align=center, minimum width=1.8cm, minimum height=0.55cm, font=\scriptsize},
+  note/.style={draw, rounded corners=2pt, fill=orange!9, align=center, minimum width=2.2cm, minimum height=0.58cm, font=\scriptsize},
+  arr/.style={-{Latex[length=2.2mm]}, thick}
+]
+\node[state] (h) {History};
+\node[state, right=0.65cm of h] (e) {Exam};
+\node[state, right=0.65cm of e] (l) {Labs};
+\node[state, right=0.65cm of l] (i) {Imaging};
+\node[state, right=0.65cm of i, fill=green!8] (d) {Diagnosis};
+\draw[arr] (h) -- (e);
+\draw[arr] (e) -- (l);
+\draw[arr] (l) -- (i);
+\draw[arr] (i) -- (d);
+\node[note, below=0.65cm of e] (missing) {이 path가 좋은지\\label이 없음};
+\draw[arr, dashed] (missing) -- (e);
+\draw[arr, dashed] (missing) -- (l);
+\draw[arr, dashed] (missing) -- (i);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.4em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{있는 supervision}
+\scriptsize
+\begin{itemize}
+  \item final diagnosis
+  \item observed test results
+  \item sometimes clinician-ordered tests
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{없는 supervision}
+\scriptsize
+\begin{itemize}
+  \item 어떤 evidence가 결정적인가?
+  \item 어떤 순서가 효율적인가?
+  \item 어느 시점에 멈춰야 하는가?
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{LA-CDM: Terminal Reward + Cost Penalty}
+\vspace{0.1em}
+\smallgray{Language Agents for Hypothesis-driven Clinical Decision Making with Reinforcement Learning · ICLR 2026}
+
+\vspace{0.4em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{핵심 구조}
+\scriptsize
+\begin{itemize}
+  \item Hypothesis agent: diagnosis + confidence
+  \item Decision agent: next test or final diagnosis
+  \item SFT + GRPO
+  \item reward: correctness와 test cost
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{한계}
+\scriptsize
+\begin{itemize}
+  \item terminal reward 중심
+  \item evidence quality signal이 약함
+  \item stopping은 emergent behavior
+  \item fixed action/label space
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+
+\vspace{0.5em}
+\begin{block}{이 논문이 보여준 것}
+\small
+MIMIC-CDM에서 \textbf{task-specific training}이 sequential diagnosis 성능과 test efficiency를 개선할 수 있다. 하지만 좋은 path를 직접 supervise하지는 못한다.
+\end{block}
+\end{frame}
+
+\begin{frame}{LDTL: Local Information Gain으로 Path Signal 만들기}
+\vspace{0.1em}
+\smallgray{Latent Diagnostic Trajectory Learning}
+
+\vspace{0.35em}
+\begin{block}{핵심 아이디어}
+\small
+정답 path label 대신, 다음 action이 gold diagnosis probability를 얼마나 올리는지로 supervision을 만든다.
+\end{block}
+
+\vspace{0.2em}
+\begin{equation*}
+\mathrm{IG}(h_t, a)
+= \log p(y^\ast \mid h_t, a, o_{t+1})
+- \log p(y^\ast \mid h_t)
+\end{equation*}
+
+\vspace{0.1em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{장점}
+\scriptsize
+\begin{itemize}
+  \item terminal reward보다 dense함
+  \item next test selection에 직접적인 signal
+  \item path label 없이 학습 가능
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{한계}
+\scriptsize
+\begin{itemize}
+  \item one-step greedy objective
+  \item cost-to-stop 관점이 약함
+  \item stopping criterion이 중심이 아님
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{SIFT: Critical Fact를 Reward로 만들기}
+\vspace{0.1em}
+\smallgray{Learning What Matters: Criticality-Guided RL for Sequential Clinical Diagnosis}
+
+\vspace{0.25em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{Offline preprocessing}
+\scriptsize
+\begin{enumerate}
+  \item patient record에서 atomic facts 추출
+  \item gold diagnosis 기준 criticality score 부여
+  \item trajectory가 발견한 facts를 matching
+\end{enumerate}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Reward}
+\scriptsize
+\[
+CR(\tau)=
+\frac{\sum_{f \in D(\tau)} w_f}
+{\sum_{f \in F} w_f}
+\]
+\[
+R(\tau)=(\alpha CR+\beta)\mathrm{acc}
++\eta CR-\lambda t/T
+\]
+\end{block}
+\end{column}
+\end{columns}
+
+\vspace{0.25em}
+\begin{alertblock}{해석}
+\scriptsize
+SIFT는 ``마지막에 맞았는가''보다 ``진단적으로 중요한 evidence를 회수했는가''를 reward한다. 다만 criticality scoring, fact matching, simulator response가 모두 LLM evaluator에 의존한다.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{CaRT: When to Stop을 별도 문제로 학습}
+\vspace{0.1em}
+\smallgray{Teaching LLMs When to Stop Seeking and Start Acting · ICLR 2026 rejected}
+
+\vspace{0.35em}
+\begin{block}{핵심 아이디어}
+\small
+termination이 적절한 trajectory와, 거의 같지만 termination이 부적절한 counterfactual trajectory를 만들어 stop/continue reasoning을 학습한다.
+\end{block}
+
+\vspace{0.25em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{장점}
+\scriptsize
+\begin{itemize}
+  \item stopping을 정면으로 다룸
+  \item overthinking/over-testing 문제와 직접 연결
+  \item math와 medical diagnosis에 모두 적용
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{리뷰에서 드러난 약점}
+\scriptsize
+\begin{itemize}
+  \item acquisition과 termination이 분리됨
+  \item external reward/model capability에 label 의존
+  \item complexity 대비 baseline 설득이 필요
+\end{itemize}
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{5개 연구 비교: Supervision의 차이}
+\vspace{-0.2em}
+\scriptsize
+\begin{tabularx}{\textwidth}{lYYYY}
+\toprule
+\textbf{Work} & \textbf{역할} & \textbf{Path signal} & \textbf{Stopping} & \textbf{주요 한계} \\
+\midrule
+MIMIC-CDM & Benchmark & 없음 & 평가 setting & retrospective, narrow scope \\
+LA-CDM & RL agent & terminal acc + cost & emergent & credit assignment \\
+LDTL & acquisition & local information gain & weak/heuristic & myopic \\
+SIFT & open-ended RL & critical fact recall & weak & scorer/evaluator dependency \\
+CaRT & termination & counterfactual stop label & explicit & acquisition과 분리 \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.6em}
+\begin{block}{공통점}
+\small
+모두 같은 빈칸을 다른 방식으로 메운다: \textbf{좋은 path가 무엇인지 직접 label이 없기 때문에 proxy supervision을 설계한다.}
+\end{block}
+\end{frame}
+
+\begin{frame}{OpenReview에서 보이는 Field의 압력}
+\vspace{0.15em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{LA-CDM 리뷰에서 반복된 지점}
+\scriptsize
+\begin{itemize}
+  \item MIMIC-CDM scope가 좁다
+  \item retrospective data라 exploration이 제한된다
+  \item unavailable tests가 많다
+  \item 그래도 comparable public benchmark가 거의 없다
+\end{itemize}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{CaRT 리뷰에서 반복된 지점}
+\scriptsize
+\begin{itemize}
+  \item stopping만 다루면 부족하다
+  \item what-to-ask와 when-to-stop을 연결해야 한다
+  \item heuristic/reward-model label의 정당성이 필요하다
+  \item 단순 baseline과 비교가 중요하다
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+
+\vspace{0.45em}
+\begin{alertblock}{Takeaway}
+\small
+이 분야는 데이터셋 한계가 크지만, 리뷰어들은 그 한계를 알고 있다. 대신 \textbf{path supervision의 정당성, stopping의 명시성, baseline 설계}를 강하게 본다.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{현재 동향: Sparse Terminal Reward에서 Dense Path Signal로}
+\vspace{0.2em}
+\begin{center}
+\begin{tikzpicture}[
+  phase/.style={draw, rounded corners=2pt, fill=white, align=center, minimum width=2.1cm, minimum height=0.78cm, font=\scriptsize},
+  arr/.style={-{Latex[length=2.2mm]}, thick}
+]
+\node[phase, fill=gray!10] (bench) {Benchmark\\MIMIC-CDM};
+\node[phase, right=0.45cm of bench, fill=blue!7] (term) {Terminal reward\\LA-CDM};
+\node[phase, right=0.45cm of term, fill=green!7] (dense) {Dense proxy\\LDTL/SIFT};
+\node[phase, right=0.45cm of dense, fill=purple!8] (stop) {Stopping\\CaRT};
+\draw[arr] (bench) -- (term);
+\draw[arr] (term) -- (dense);
+\draw[arr] (dense) -- (stop);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.6em}
+\begin{block}{변화의 방향}
+\small
+\begin{itemize}
+  \item \textbf{Can LLMs diagnose sequentially?}에서
+  \item \textbf{How do we supervise the diagnostic path?}로 이동
+  \item 다음 질문은 \textbf{How do we jointly define acquisition and stopping?}
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{남은 Gap: Acquisition과 Stopping의 통합}
+\vspace{0.2em}
+\begin{block}{현재 방법들의 분리}
+\small
+\begin{itemize}
+  \item LA-CDM: correctness와 cost는 있지만 stopping은 emergent
+  \item LDTL: 다음 evidence 선택은 있지만 stopping은 약함
+  \item SIFT: evidence quality는 있지만 stopping criterion은 약함
+  \item CaRT: stopping은 있지만 acquisition과 분리됨
+\end{itemize}
+\end{block}
+
+\vspace{0.35em}
+\begin{alertblock}{열려 있는 질문}
+\small
+\textbf{현재 evidence가 진단에 충분한지}와 \textbf{추가 evidence가 비용만큼 가치 있는지}를 같은 objective 안에서 정의할 수 있는가?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{우리 쪽으로 연결되는 Framing}
+\vspace{0.2em}
+\begin{block}{Sequential Selective Diagnosis}
+\small
+일반 selective classification은 불확실하면 abstain한다. Sequential diagnosis에서는 abstain 대신 \textbf{추가 evidence를 획득}한다.
+\end{block}
+
+\vspace{0.25em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{Stopping}
+\scriptsize
+\[
+\max_y p_{\mathrm{cal}}(y\mid S) \ge \theta
+\]
+또는 conformal prediction set이 singleton이 되면 stop.
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Acquisition}
+\scriptsize
+\[
+C(S)=\min_a \mathrm{cost}(a)+C(S\cup\{a\})
+\]
+calibrated confidence threshold에 도달하는 최소 비용 path.
+\end{block}
+\end{column}
+\end{columns}
+
+\vspace{0.35em}
+\begin{alertblock}{핵심 차별점}
+\scriptsize
+Path reward를 LLM fact scorer나 terminal reward에 맡기지 않고, calibrated diagnostic sufficiency와 cost-to-threshold planning으로 정의한다.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{발표에서 가져갈 메시지}
+\vspace{0.2em}
+\begin{enumerate}
+\small
+  \item MIMIC-CDM은 작지만 sequential clinical diagnosis 연구를 가능하게 한 핵심 benchmark다.
+  \item LA-CDM, LDTL, SIFT, CaRT는 모두 path label 부재를 서로 다른 proxy로 해결하려는 시도다.
+  \item Field의 중심 질문은 accuracy 자체보다 \textbf{좋은 evidence path를 어떻게 정의하고 학습할 것인가}로 이동하고 있다.
+  \item 남은 gap은 acquisition과 stopping을 분리하지 않고, calibrated sufficiency와 cost를 함께 다루는 것이다.
+\end{enumerate}
+
+\vspace{0.55em}
+\begin{center}
+\Large
+\textbf{좋은 path = 빨리, 싸게, 충분한 확신에 도달하는 evidence sequence}
+\end{center}
+\end{frame}
+
+\begin{frame}{Discussion}
+\vspace{0.6em}
+\begin{block}{다음 실험으로 확인할 것}
+\small
+\begin{itemize}
+  \item evidence subset별 CA calibration이 실제로 다른가?
+  \item confidence threshold로 stopping했을 때 stopped-case accuracy가 보장되는가?
+  \item local information gain보다 cost-to-threshold planning이 더 효율적인가?
+  \item MIMIC-CDM의 modality-level action space가 충분히 설득력 있는가?
+\end{itemize}
+\end{block}
+
+\vspace{0.6em}
+\centering
+\Large Questions
+\end{frame}
+
+\end{document}

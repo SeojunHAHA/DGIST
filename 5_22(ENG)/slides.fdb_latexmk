@@ -1,14 +1,14 @@
 # Fdb version 3
-["biber slides"] 1779532980 "slides.bcf" "slides.bbl" "slides" 1779620108
-  "slides.bcf" 1779620107 123219 8c9998eb7e3bce1a8db37fba3cf0b744 "xelatex"
+["biber slides"] 1779532980 "slides.bcf" "slides.bbl" "slides" 1779620509
+  "slides.bcf" 1779620507 123219 8c9998eb7e3bce1a8db37fba3cf0b744 "xelatex"
   (generated)
   "slides.bbl"
   "slides.blg"
-["xdvipdfmx"] 1779620107 "slides.xdv" "slides.pdf" "slides" 1779620108
-  "slides.xdv" 1779620107 222020 cb09335a24baaf4440b6145b64fce6c8 "xelatex"
+["xdvipdfmx"] 1779620508 "slides.xdv" "slides.pdf" "slides" 1779620509
+  "slides.xdv" 1779620507 240312 4c19b52c0a22a24b28183e99feae23b7 "xelatex"
   (generated)
   "slides.pdf"
-["xelatex"] 1779620104 "slides.tex" "slides.xdv" "slides" 1779620108
+["xelatex"] 1779620505 "slides.tex" "slides.xdv" "slides" 1779620509
   "/etc/texmf/web2c/texmf.cnf" 1779410985 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
@@ -343,12 +343,12 @@
   "figures/SIFT/result_evidence_quality.png" 1779541100 83591 6a40be0b701ecd7eef378e7a50deea6a ""
   "figures/SIFT/result_logistic_regression.png" 1779541100 53719 1fde0c12b90787f27b7b44161110a8da ""
   "loadslides.tex" 1779079492 3605 9afa386d49f50f00ae3f7d9173309456 ""
-  "slides.aux" 1779620107 5224 75a73419635bdb3dadd516b4a7041fb4 "xelatex"
+  "slides.aux" 1779620507 5224 75a73419635bdb3dadd516b4a7041fb4 "xelatex"
   "slides.bbl" 1779532981 466 ee04f40f768daeed26442158e95aba61 "biber slides"
-  "slides.nav" 1779620107 2504 87c6b4c46b7e4f182816872897be6de4 "xelatex"
-  "slides.out" 1779620106 0 d41d8cd98f00b204e9800998ecf8427e "xelatex"
-  "slides.run.xml" 1779620107 2510 a2d6c119bb8bc2ce76aa018a951cced0 "xelatex"
-  "slides.tex" 1779620093 28437 d9fe2a6aa7f4eab80123667f72fc5628 ""
+  "slides.nav" 1779620507 2504 87c6b4c46b7e4f182816872897be6de4 "xelatex"
+  "slides.out" 1779620507 0 d41d8cd98f00b204e9800998ecf8427e "xelatex"
+  "slides.run.xml" 1779620507 2510 a2d6c119bb8bc2ce76aa018a951cced0 "xelatex"
+  "slides.tex" 1779620489 27908 c1fa5bf78fed7143c1d0da93daeec0ee ""
   "styles/beamercolorthemeelegant.sty" 1779079492 3878 4258af8fbaca016dcbc75e52902c48e7 ""
   "styles/beamerfontthemeelegant.sty" 1779079492 988 66866602cbc9a3f68add9d224432215f ""
   "styles/beamerinnerthemeelegant.sty" 1779079492 5654 a25b4beaff04248dcecd04a3837d74e5 ""

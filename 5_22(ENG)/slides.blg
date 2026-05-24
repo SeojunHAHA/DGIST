@@ -1,0 +1,9 @@
+[0] Config.pm:307> INFO - This is Biber 2.17
+[0] Config.pm:310> INFO - Logfile is 'slides.blg'
+[50] biber:340> INFO - === Sat May 23, 2026, 19:43:01
+[60] Biber.pm:418> INFO - Reading 'slides.bcf'
+[106] Biber.pm:972> INFO - Found 0 citekeys in bib section 0
+[114] bbl.pm:654> INFO - Writing 'slides.bbl' with encoding 'UTF-8'
+[114] bbl.pm:757> INFO - Output to slides.bbl
+[114] Biber.pm:130> WARN - The file 'slides.bcf' does not contain any citations!
+[114] Biber.pm:132> INFO - WARNINGS: 1

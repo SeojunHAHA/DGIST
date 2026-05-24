@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.5.22)  24 MAY 2026 19:55
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.5.22)  24 MAY 2026 20:01
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2032,10 +2032,10 @@ Package logreq Info: Writing requests to 'slides.run.xml'.
 Here is how much of TeX's memory you used:
  54827 strings out of 477756
  1270244 string characters out of 5843518
- 2163625 words of memory out of 5000000
+ 2161745 words of memory out of 5000000
  74460 multiletter control sequences out of 15000+600000
  479568 words of font info for 131 fonts, out of 8000000 for 9000
  264 hyphenation exceptions out of 8191
  115i,16n,130p,2006b,5160s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on slides.xdv (25 pages, 222020 bytes).
+Output written on slides.xdv (25 pages, 240312 bytes).

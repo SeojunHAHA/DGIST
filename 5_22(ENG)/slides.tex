@@ -64,11 +64,11 @@
 \setbeamerfont{subtitle}{size=\normalsize}
 \setbeamerfont{frametitle}{series=\bfseries}
 
-\title[]{MIMIC-CDM 기반 Sequential Clinical Diagnosis 연구 동향}
-\subtitle{Path Supervision과 Stopping 문제를 중심으로}
-\author[]{하서준}
+\title[]{Survey of Sequential Clinical Diagnosis with MIMIC-CDM}
+\subtitle{Focusing on Path Supervision and Stopping}
+\author[]{SeoJun Ha}
 \institute{DGIST}
-\date{2026년 5월 22일}
+\date{May 22, 2026}
 
 \begin{document}
 
@@ -107,42 +107,42 @@
 \end{tikzpicture}
 \end{center}
 \vspace{-0.1em}
-\begin{block}{최근에 생긴 문제 세팅}
+\begin{block}{Recently Emerging Problem Setting}
 \small
-MIMIC-CDM (2024)이 \textbf{sequential evidence acquisition}을 benchmark로 만들면서,
-LLM diagnosis가 ``full information classification''에서 ``어떤 검사를 언제 볼 것인가''를 학습하는 문제로 이동했다.
+MIMIC-CDM (2024) introduced \textbf{sequential evidence acquisition} as a benchmark,
+shifting LLM diagnosis from ``full-information classification'' to learning ``which test to inspect and when.''
 \end{block}
 \end{frame}
 
-\begin{frame}{오늘의 중점 주제}
+\begin{frame}{Main Focus}
 \vspace{0.55em}
-\begin{block}{좋은 trajectory가 무엇인가?}
+\begin{block}{What is a good trajectory?}
 \small
-정답 diagnosis label은 있지만 \textbf{좋은 diagnostic path label은 없다}. 그래서 최근 연구들은 좋은 trajectory를 직접 관측하지 못한 상태에서, 각자 다른 proxy로 이 빈칸을 메우고 있다.
+We have the ground-truth diagnosis label, but \textbf{we do not have labels for good diagnostic paths}. Recent studies therefore fill this gap with different proxies, without directly observing the optimal trajectory.
 \end{block}
 
 \vspace{0.75em}
 \begin{itemize}
 \small
-  \item \textbf{LA-CDM}: 정확도와 검사 비용을 최적화하는 RL
-  \item \textbf{LDTL}: 전체 trajectory를 우리가 모르는 latent로 두고, one-step information gain으로 근사
-  \item \textbf{SIFT}: 중간 검사에 보상을 주어 좋은 검사를 많이 회수했는지 강화학습
+  \item \textbf{LA-CDM}: RL that optimizes diagnostic accuracy and test cost
+  \item \textbf{LDTL}: treats the full trajectory as latent and approximates it with one-step information gain
+  \item \textbf{SIFT}: RL with intermediate rewards for retrieving more high-quality evidence
 \end{itemize}
 \end{frame}
 
-\begin{frame}{MIMIC-CDM 데이터셋}
+\begin{frame}{MIMIC-CDM Dataset}
 \vspace{0.15em}
 \begin{columns}[T,onlytextwidth]
 \begin{column}{0.45\textwidth}
-\begin{block}{Benchmark 목적}
+\begin{block}{Benchmark Goal}
 \small
-환자에게 모든 정보가 한 번에 주어지는 classification 문제가 아니라, \textbf{검사를 순차적으로 선택}하면서 diagnosis를 맞히는 clinical decision-making benchmark를 만든다.
+Instead of a classification task where all patient information is given at once, MIMIC-CDM defines a clinical decision-making benchmark where the model must \textbf{select tests sequentially} and then predict the diagnosis.
 \end{block}
 
 \vspace{0.35em}
-\begin{block}{규모와 label}
+\begin{block}{Scale and Labels}
 \small
-총 \textbf{2,400명}의 abdominal disease 환자 사례.
+A total of \textbf{2,400} abdominal disease patient cases.
 
 \vspace{0.35em}
 \textbf{Disease list}
@@ -175,7 +175,7 @@ Complete Blood Count, Basic Metabolic Panel, Comprehensive Metabolic Panel, Rena
 \textbf{3. Physical examination} \hfill {\footnotesize 1 action}
 
 \vspace{1.0em}
-{\footnotesize\textcolor{red}{일부 환자에서는 특정 검사 결과가 기록되지 않은 경우가 있다.}}
+{\footnotesize\textcolor{red}{Some patients do not have records for certain test results.}}
 \end{block}
 \end{column}
 \end{columns}
@@ -191,23 +191,23 @@ Complete Blood Count, Basic Metabolic Panel, Comprehensive Metabolic Panel, Rena
 {\scriptsize ICLR 2026}
 \end{frame}
 
-\begin{frame}{LA-CDM: 문제 제기}
+\begin{frame}{LA-CDM: Motivation}
 \vspace{0.1em}
-\begin{block}{1. 기존 clinical RL은 주로 tabular data만 고려함}
+\begin{block}{1. Existing clinical RL mostly focuses on tabular data}
 \small
-기존 reinforcement learning 기반 clinical decision-making은 주로 \textbf{tabular data}에 맞춰져 있다. 그래서 clinical notes, imaging reports처럼 실제 진단에서 중요한 modality를 놓친다.
+Prior reinforcement-learning approaches to clinical decision-making are mostly designed for \textbf{tabular data}. As a result, they miss clinically important modalities such as clinical notes and imaging reports.
 \end{block}
 
 \vspace{0.55em}
-\begin{block}{2. 기존 LLM clinical decision-making은 대부분 zero-shot임}
+\begin{block}{2. Existing LLM clinical decision-making is mostly zero-shot}
 \small
-기존 LLM 기반 clinical decision-making은 prompting이나 zero-shot reasoning에 의존한다. 즉, \textbf{diagnostic test selection과 sequential decision-making 자체를 명시적으로 학습}하지 않는다.
+Existing LLM-based clinical decision-making mostly relies on prompting or zero-shot reasoning. It does not explicitly train \textbf{diagnostic test selection or sequential decision-making itself}.
 \end{block}
 
 \vspace{0.55em}
-\begin{block}{LA-CDM의 문제 설정}
+\begin{block}{LA-CDM Problem Setting}
 \small
-그래서 LA-CDM은 multimodal patient state에서 test를 순차적으로 요청하고, confidence가 충분할 때 diagnosis를 내리는 LLM-based clinical decision-making 문제를 제시한다.
+LA-CDM frames LLM-based clinical decision-making as sequentially requesting tests from a multimodal patient state and making a diagnosis when confidence is sufficient.
 \end{block}
 \end{frame}
 
@@ -217,16 +217,16 @@ Complete Blood Count, Basic Metabolic Panel, Comprehensive Metabolic Panel, Rena
 \includegraphics[width=0.98\linewidth,height=0.66\textheight,keepaspectratio]{figures/LA-CDM/main.png}
 
 \vspace{0.45em}
-\begin{block}{구성요소}
+\begin{block}{Components}
 \small
-\textbf{Hypothesis}: 현재까지 얻은 patient state를 바탕으로 가능한 diagnosis 후보를 유지한다.
+\textbf{Hypothesis}: maintains possible diagnosis candidates based on the patient state observed so far.
 
 \vspace{0.25em}
-\textbf{Decision agent}: 다음 test를 요청하거나, 충분한 confidence가 있으면 최종 diagnosis를 선택한다.
+\textbf{Decision agent}: requests the next test, or selects the final diagnosis when confidence is sufficient.
 \end{block}
 \end{frame}
 
-\begin{frame}{LA-CDM: 방법}
+\begin{frame}{LA-CDM: Method}
 \vspace{0.1em}
 \begin{center}
 \begin{tikzpicture}[
@@ -252,11 +252,11 @@ Complete Blood Count, Basic Metabolic Panel, Comprehensive Metabolic Panel, Rena
 \footnotesize
 \begin{enumerate}
   \item \textbf{Hypothesis generation}\\
-  HA가 각 state에서 정답 diagnosis \(y_{\mathrm{true}}\)를 생성하도록 SFT.
+  SFT trains HA to generate the ground-truth diagnosis \(y_{\mathrm{true}}\) at each state.
   \item \textbf{Uncertainty-awareness}\\
-  confidence가 \(J(h_j)=\mathbb{1}[h_j=y_{\mathrm{true}}]\)에 맞도록 GRPO calibration.
+  GRPO calibration aligns confidence with \(J(h_j)=\mathbb{1}[h_j=y_{\mathrm{true}}]\).
   \item \textbf{Efficient action selection}\\
-  DA가 필요한 test와 stop/diagnosis를 GRPO로 학습.
+  GRPO trains DA to request useful tests and decide when to stop/diagnose.
 \end{enumerate}
 \end{block}
 \end{column}
@@ -277,13 +277,13 @@ R_{\mathrm{cost}}(T)=-\sum_{t_j\in T}c(t_j)
 \]
 \vspace{-0.1em}
 \footnotesize
-이 reward는 \textbf{efficient action selection phase}에서만 쓰인다. Hypothesis SFT와 confidence calibration은 별도 objective로 cycle 안에서 번갈아 학습된다.
+This reward is used only in the \textbf{efficient action selection phase}. Hypothesis SFT and confidence calibration use separate objectives and are alternated within the training cycle.
 \end{block}
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}[t]{LA-CDM: 결과와 의미}
+\begin{frame}[t]{LA-CDM: Results and Implications}
 \centering
 \vspace{0.7em}
 \includegraphics[
@@ -295,12 +295,12 @@ R_{\mathrm{cost}}(T)=-\sum_{t_j\in T}c(t_j)
 ]{figures/LA-CDM/results/page-08.png}
 
 \vspace{0.2em}
-\begin{block}{결과가 주장하는 것}
+\begin{block}{What the Results Suggest}
 \small
 \begin{itemize}
   \item LA-CDM mean accuracy \(81.3\), macro F1 \(81.3\)
-  \item ReAct보다 높은 성능과 낮은 평균 test cost
-  \item training 후 confidence calibration도 개선
+  \item Higher performance and lower average test cost than ReAct
+  \item Confidence calibration also improves after training
 \end{itemize}
 \end{block}
 \end{frame}
@@ -315,23 +315,23 @@ R_{\mathrm{cost}}(T)=-\sum_{t_j\in T}c(t_j)
 {\scriptsize arXiv 2026}
 \end{frame}
 
-\begin{frame}{LDTL: 문제 제기}
+\begin{frame}{LDTL: Motivation}
 \vspace{0.1em}
-\begin{block}{1. LLM 진단은 test selection을 명시적으로 모델링하지 못함}
+\begin{block}{1. LLM diagnosis does not explicitly model test selection}
 \small
-LLM 기반 diagnostic system은 진단을 생성할 수는 있지만, 실제 임상 경로처럼 \textbf{어떤 test를 어떤 순서로 선택해야 하는지}를 명시적으로 모델링하지 못한다.
+LLM-based diagnostic systems can generate diagnoses, but they do not explicitly model \textbf{which tests should be selected and in what order}, as in real clinical pathways.
 \end{block}
 
 \vspace{0.35em}
-\begin{block}{2. Terminal reward만으로는 trajectory 학습이 부족함}
+\begin{block}{2. Terminal reward is insufficient for trajectory learning}
 \small
-terminal reward로 성능과 비용을 최적화하는 방식은 \textbf{diagnostic trajectory의 구조나 분포}를 직접 제어하지 못한다. 따라서 제한된 clinical trajectories에서 불안정하고, 어떤 path가 바람직한지에 대한 supervision이 약하다.
+Optimizing performance and cost only through terminal reward does not directly control the \textbf{structure or distribution of diagnostic trajectories}. This can be unstable with limited clinical trajectories and provides weak supervision for desirable paths.
 \end{block}
 
 \vspace{0.35em}
-\begin{block}{LDTL의 문제 설정}
+\begin{block}{LDTL Problem Setting}
 \small
-그래서 LDTL은 test selection을 \textbf{Latent Diagnostic Trajectory Learning} 문제로 두고, 단순 reward가 아니라 diagnostic improvement 기반의 action signal을 만들려고 한다.
+LDTL formulates test selection as a \textbf{Latent Diagnostic Trajectory Learning} problem and constructs action signals based on diagnostic improvement rather than simple rewards.
 \end{block}
 \end{frame}
 
@@ -341,12 +341,12 @@ terminal reward로 성능과 비용을 최적화하는 방식은 \textbf{diagnos
 \includegraphics[width=0.98\linewidth,height=0.62\textheight,keepaspectratio]{figures/LDTL/main.png}
 
 \vspace{0.35em}
-\begin{block}{Agent 역할}
+\begin{block}{Agent Roles}
 \small
-\textbf{Teacher agent}: latent trajectory에서 action-wise diagnostic improvement signal을 만든다.
+\textbf{Teacher agent}: generates action-wise diagnostic improvement signals from latent trajectories.
 
 \vspace{0.2em}
-\textbf{Student agent}: teacher signal을 이용해 test selection policy를 학습한다.
+\textbf{Student agent}: learns the test selection policy using the teacher signal.
 \end{block}
 \end{frame}
 
@@ -393,7 +393,7 @@ q(A)=0.42,\quad q(B)=0.55,\quad q(C)=0.03
 \]
 }
 
-{\scriptsize 전체 trajectory score \(S(z)\)로 posterior를 만든 뒤, 같은 action으로 시작하는 trajectory들의 probability를 합쳐 action posterior를 얻는다.}
+{\scriptsize A posterior is formed from the full trajectory score \(S(z)\), then probabilities of trajectories starting with the same action are aggregated to obtain the action posterior.}
 \end{column}
 
 \begin{column}{0.02\textwidth}
@@ -436,22 +436,22 @@ IG(A)>IG(B)>IG(C)
 \]
 }
 
-{\scriptsize 실제 학습에서는 전체 trajectory를 직접 열거하지 않고, 현재 state에서 action 하나를 추가했을 때의 diagnostic improvement로 action posterior를 만든다.}
+{\scriptsize In practice, training does not enumerate full trajectories. Instead, it forms the action posterior from the diagnostic improvement obtained by adding one action to the current state.}
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}{LDTL: 방법}
+\begin{frame}{LDTL: Method}
 \vspace{0.05em}
-\begin{block}{Stage 1. Diagnostic LLM을 먼저 학습}
+\begin{block}{Stage 1. Train the diagnostic LLM first}
 \small
-full patient information, 즉 complete diagnostic results가 주어졌을 때 correct disease label을 예측하고 confidence score를 출력하도록 diagnostic LLM을 SFT한다.
+The diagnostic LLM is SFT-trained to predict the correct disease label and output a confidence score when full patient information, i.e., complete diagnostic results, is provided.
 \end{block}
 
 \vspace{0.45em}
-\begin{block}{Stage 2. Diagnostic LLM은 freeze하고 planner를 학습}
+\begin{block}{Stage 2. Freeze the diagnostic LLM and train the planner}
 \small
-학습된 diagnostic LLM을 고정한 뒤, planning LLM이 어떤 diagnostic action을 선택할지 학습한다. 각 step에서 action을 넣어본 뒤 \textbf{diagnostic improvement}로 action-level posterior \(q(a_t\mid h_t,y)\)를 만들고, planner policy를 여기에 맞춘다.
+After freezing the trained diagnostic LLM, the planning LLM learns which diagnostic action to select. At each step, candidate actions are evaluated, an action-level posterior \(q(a_t\mid h_t,y)\) is constructed from \textbf{diagnostic improvement}, and the planner policy is aligned to it.
 \end{block}
 
 \vspace{0.35em}
@@ -463,13 +463,13 @@ full patient information, 즉 complete diagnostic results가 주어졌을 때 co
 \]
 
 \vspace{0.15em}
-\begin{block}{핵심}
+\begin{block}{Key Point}
 \small
-정답 trajectory를 직접 만들지 않고, \textbf{freeze된 diagnostic LLM의 probability 변화}를 이용해서 planner supervision을 만든다.
+Instead of constructing ground-truth trajectories directly, LDTL uses \textbf{probability changes from the frozen diagnostic LLM} to create planner supervision.
 \end{block}
 \end{frame}
 
-\begin{frame}[t]{LDTL: 결과와 의미}
+\begin{frame}[t]{LDTL: Results and Implications}
 \centering
 \vspace{1.05em}
 \includegraphics[
@@ -495,12 +495,12 @@ full patient information, 즉 complete diagnostic results가 주어졌을 때 co
 
 \begin{column}{0.38\textwidth}
 \vspace{0.13\textheight}
-\begin{block}{결과 해석}
+\begin{block}{Interpretation}
 \small
-\textbf{Table 2:} LDTL이 RS, w/o LP보다 Acc와 Macro-F1에서 높다. 즉, latent trajectory supervision이 최종 진단 성능 개선으로 이어진다.
+\textbf{Table 2:} LDTL outperforms RS and w/o LP in Acc and Macro-F1. This suggests that latent trajectory supervision improves final diagnostic performance.
 
 \vspace{0.55em}
-\textbf{Figure 4:} LDTL은 1-step 종료가 많고 3-step 종료가 적다. 필요한 정보를 더 빨리 모으고, 불필요한 추가 검사를 줄이는 방향으로 학습된다는 의미다.
+\textbf{Figure 4:} LDTL has more 1-step terminations and fewer 3-step terminations. This suggests that it learns to gather necessary information earlier and reduce unnecessary extra tests.
 \end{block}
 \end{column}
 \end{columns}
@@ -516,23 +516,23 @@ full patient information, 즉 complete diagnostic results가 주어졌을 때 co
 {\scriptsize Preprint 2026}
 \end{frame}
 
-\begin{frame}{SIFT: 문제 제기}
+\begin{frame}{SIFT: Motivation}
 \vspace{0.1em}
-\begin{block}{1. 기존 benchmark는 action과 diagnosis를 닫힌 공간으로 제한함}
+\begin{block}{1. Existing benchmarks restrict actions and diagnoses to closed spaces}
 \small
-AMIE, ED-Copilot, LA-CDM 계열은 action space를 predefined test menu로 제한하고, diagnosis space도 fixed label set으로 둔다. 반면 실제 clinical reasoning은 open-ended interaction에 가깝다.
+AMIE, ED-Copilot, and LA-CDM-style benchmarks restrict the action space to a predefined test menu and the diagnosis space to a fixed label set. Real clinical reasoning, however, is closer to open-ended interaction.
 \end{block}
 
 \vspace{0.45em}
-\begin{block}{2. Terminal reward는 evidence quality를 보지 못함}
+\begin{block}{2. Terminal reward does not capture evidence quality}
 \small
-최종 diagnosis가 맞았는지는 알려주지만, trajectory가 모은 evidence가 좋은지는 말해주지 않는다. 그래서 policy가 critical finding과 noise를 구분하지 못하고 \textbf{indiscriminate information acquisition}으로 흐를 수 있다.
+It tells whether the final diagnosis is correct, but not whether the trajectory collected good evidence. As a result, the policy may fail to distinguish critical findings from noise and drift toward \textbf{indiscriminate information acquisition}.
 \end{block}
 
 \vspace{0.45em}
-\begin{block}{SIFT의 문제 설정}
+\begin{block}{SIFT Problem Setting}
 \small
-정답 path를 직접 만들기보다, trajectory가 \textbf{critical evidence}를 얼마나 회수했는지를 reward signal로 만든다.
+Instead of directly constructing ground-truth paths, SIFT turns how much \textbf{critical evidence} a trajectory retrieves into a reward signal.
 \end{block}
 \end{frame}
 
@@ -542,16 +542,16 @@ AMIE, ED-Copilot, LA-CDM 계열은 action space를 predefined test menu로 제�
 \includegraphics[width=0.98\linewidth,height=0.62\textheight,keepaspectratio]{figures/SIFT/main.png}
 
 \vspace{0.35em}
-\begin{block}{구성요소}
+\begin{block}{Components}
 \small
-\textbf{Critical evidence scorer}: diagnosis에 중요한 evidence를 sentence-level로 표시한다.
+\textbf{Critical evidence scorer}: marks diagnosis-relevant evidence at the sentence level.
 
 \vspace{0.2em}
-\textbf{Reward shaping}: critical evidence 회수를 중간 reward로 바꿔 test selection을 학습한다.
+\textbf{Reward shaping}: converts critical evidence retrieval into intermediate rewards for learning test selection.
 \end{block}
 \end{frame}
 
-\begin{frame}{SIFT: 사전 criticality scoring}
+\begin{frame}{SIFT: Offline Criticality Scoring}
 \vspace{0.1em}
 \begin{columns}[T,onlytextwidth]
 \begin{column}{0.45\textwidth}
@@ -564,13 +564,13 @@ AMIE, ED-Copilot, LA-CDM 계열은 action space를 predefined test menu로 제�
 {\large\bfseries\textcolor{primary}{1. Fact extraction}}
 
 \vspace{0.35em}
-{\small Training 전에 patient record \(M\)에서 atomic clinical facts를 추출한다.}
+{\small Before training, atomic clinical facts are extracted from the patient record \(M\).}
 
 \vspace{0.15em}
 {\small \(F=\phi(M)=\{f_1,\ldots,f_n\}\)}
 
 \vspace{0.25em}
-{\footnotesize 각 \(f_i\)는 lab value, imaging finding, physical exam result처럼 해석이 섞이지 않은 단일 observation이다.}
+{\footnotesize Each \(f_i\) is a single observation, such as a lab value, imaging finding, or physical exam result, without mixed interpretation.}
 
 \vspace{1.0em}
 {\large\bfseries\textcolor{primary}{2. Criticality scoring}}
@@ -579,7 +579,7 @@ AMIE, ED-Copilot, LA-CDM 계열은 action space를 predefined test menu로 제�
 {\small \(w_f=\psi(f\mid d^{*},o_0),\quad w_f\in\{0,1,2,3\}\)}
 
 \vspace{0.25em}
-{\footnotesize gold diagnosis \(d^{*}\)와 initial presentation \(o_0\) 기준으로 각 fact가 얼마나 diagnosis를 confirm하는지 점수화한다.}
+{\footnotesize Each fact is scored by how strongly it confirms the diagnosis, conditioned on the gold diagnosis \(d^{*}\) and initial presentation \(o_0\).}
 
 \vspace{1.0em}
 {\large\bfseries\textcolor{primary}{Score meaning}}
@@ -587,24 +587,24 @@ AMIE, ED-Copilot, LA-CDM 계열은 action space를 predefined test menu로 제�
 \vspace{0.25em}
 {\footnotesize
 \begin{itemize}
-  \item \(0\): diagnosis와 무관
+  \item \(0\): irrelevant to the diagnosis
   \item \(1\): supportive but non-specific evidence
   \item \(2\): significant evidence
   \item \(3\): hallmark / pathognomonic finding
 \end{itemize}
-Scoring은 offline으로 수행되어 rollout 중 \(\psi\)를 호출하지 않는다.
+Scoring is performed offline, so \(\psi\) is not called during rollout.
 }
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}{SIFT: 방법}
+\begin{frame}{SIFT: Method}
 \vspace{0.35em}
-{\large\bfseries\textcolor{primary}{1. 왜 terminal reward만으로 부족한가}}
+{\large\bfseries\textcolor{primary}{1. Why is terminal reward insufficient?}}
 
 \vspace{0.35em}
 {\small
-최종 diagnosis가 맞았는지만 보는 binary reward는 episode 끝에서만 관측된다. 어떤 action이 correct diagnosis에 기여했는지 알려주지 못하고, agent가 진단적으로 무관한 정보까지 넓게 수집하는 방향으로 흐를 수 있다.
+A binary reward that only checks whether the final diagnosis is correct is observed only at the end of the episode. It does not indicate which action contributed to the correct diagnosis, so the agent may broadly collect diagnostically irrelevant information.
 }
 
 \vspace{1.0em}
@@ -614,7 +614,7 @@ Scoring은 offline으로 수행되어 rollout 중 \(\psi\)를 호출하지 않�
 
 \vspace{0.35em}
 {\small
-Trajectory가 회수한 critical facts의 비율을 측정한다.
+Measures the fraction of critical facts retrieved by the trajectory.
 }
 \[
 CR(\tau)=
@@ -622,19 +622,19 @@ CR(\tau)=
 {\sum_{f \in F} w_f}
 \]
 \vspace{-0.25em}
-{\footnotesize \(F\): 전체 fact set, \(D(\tau)\): 발견된 fact set, \(w_f\): criticality score.}
+{\footnotesize \(F\): full fact set, \(D(\tau)\): discovered fact set, \(w_f\): criticality score.}
 \end{column}
 \begin{column}{0.48\textwidth}
 {\large\bfseries\textcolor{primary}{3. Criticality-weighted reward}}
 
 \vspace{0.35em}
 {\small
-정답 여부와 critical evidence 회수를 같이 reward에 반영한다.
+The reward combines diagnostic correctness and critical evidence retrieval.
 }
 \[
 \resizebox{\linewidth}{!}{$
 R(\tau)=
-\underbrace{(\alpha CR(\tau)+\beta)\,\mathrm{acc}(\hat d,d^{*})}_{\text{\scriptsize 정답 보상}}
+\underbrace{(\alpha CR(\tau)+\beta)\,\mathrm{acc}(\hat d,d^{*})}_{\text{\scriptsize correctness reward}}
 +
 \underbrace{\eta CR(\tau)}_{\text{\scriptsize partial credit}}
 -
@@ -644,16 +644,16 @@ $}
 \vspace{-0.45em}
 {\footnotesize
 \begin{itemize}
-  \item \textbf{정답 보상}: 정답이면 기본 보상 \(\beta\), \(CR(\tau)\)만큼 \(\alpha CR(\tau)\) 추가. 오답이면 이 항은 \(0\)
-  \item \textbf{Partial credit}: 오답이어도 critical evidence를 많이 찾으면 \(\eta CR(\tau)\) 보상
-  \item \textbf{Step penalty}: 검사 step을 많이 쓸수록 감점. \(t\): 사용 step, \(T\): 최대 step
+  \item \textbf{Correctness reward}: if correct, base reward \(\beta\) plus \(\alpha CR(\tau)\); if incorrect, this term is \(0\)
+  \item \textbf{Partial credit}: even if incorrect, retrieving critical evidence gives \(\eta CR(\tau)\)
+  \item \textbf{Step penalty}: penalizes using more test steps. \(t\): used steps, \(T\): maximum steps
 \end{itemize}
 }
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}[t]{SIFT: 결과와 의미}
+\begin{frame}[t]{SIFT: Results and Implications}
 \centering
 \vspace{0.25em}
 \includegraphics[width=0.98\linewidth,height=0.51\textheight,keepaspectratio]{figures/SIFT/result_evidence_quality.png}
@@ -662,10 +662,10 @@ $}
 \includegraphics[width=0.86\linewidth,height=0.26\textheight,keepaspectratio]{figures/SIFT/result_logistic_regression.png}
 
 \vspace{0.45em}
-{\footnotesize 결과 해석: evidence의 양보다 critical evidence ratio가 diagnostic success를 가장 강하게 설명한다.}
+{\footnotesize Interpretation: the critical evidence ratio explains diagnostic success more strongly than the amount of evidence.}
 \end{frame}
 
-\begin{frame}{기존 방법들의 trajectory-level 접근}
+\begin{frame}{Existing Trajectory-Level Approaches}
 \vspace{0.0em}
 \centering
 \begin{tikzpicture}[scale=1.13, transform shape,
@@ -685,8 +685,8 @@ $}
 \draw[edge] (l2) -- (l3);
 \draw[edge] (l3) -- (l4);
 \draw[edge] (l4) -- (l5);
-\node[note] at (-0.55,0.55) {trajectory \(z=(A,B,C)\)를 만들고};
-\node[note] at (3.2,0.55) {끝의 정답 confidence /\\accuracy를 보고 따라감};
+\node[note] at (-0.55,0.55) {construct trajectory \(z=(A,B,C)\)};
+\node[note] at (3.2,0.55) {follow final confidence /\\accuracy};
 
 \node[tag, anchor=east] at (-5.25,-1.10) {SIFT};
 \node[node] (s1) at (-4.35,-1.10) {\(S\)\\initial};
@@ -698,18 +698,18 @@ $}
 \draw[edge] (s2) -- (s3);
 \draw[edge] (s3) -- (s4);
 \draw[edge] (s4) -- (s5);
-\node[note] at (-1.25,-2.02) {trajectory \(\tau=\{(a_t,o_t)\}\) 안에서\\critical facts를 얼마나 회수했는지 측정};
+\node[note] at (-1.25,-2.02) {measure how many critical facts are retrieved\\within trajectory \(\tau=\{(a_t,o_t)\}\)};
 \node[font=\tiny, text=TextGray, align=center] at (3.2,-2.42) {\(R(\tau)=(\alpha CR+\beta)acc+\eta CR-\lambda t/T\)};
 \end{tikzpicture}
 
 \vspace{0.35em}
-\begin{alertblock}{두 연구의 기본 가정}
+\begin{alertblock}{Shared Assumption}
 \small
-하나의 검사가 주는 정보량이 비교적 \textbf{독립적}이라고 본다. 즉, 어떤 검사 결과를 이미 알았다는 사실이 다른 검사를 추가했을 때의 예측 변화에 크게 영향을 주지 않는다고 가정하는 셈이다.
+They implicitly treat the information provided by each test as relatively \textbf{independent}. In other words, knowing one test result is assumed not to substantially change the predictive value of adding another test.
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{Greedy가 실패하는 이유는 중간 reward 부재가 아니다}
+\begin{frame}{Greedy Does Not Fail Because Intermediate Reward Is Missing}
 \vspace{0.1em}
 \begin{columns}[T,onlytextwidth]
 \begin{column}{0.48\textwidth}
@@ -739,7 +739,7 @@ $}
 
 \vspace{0.25em}
 {\footnotesize
-Greedy는 \(U(A)>U(B)\)라서 \(A\)를 고른다. 하지만 같은 \(C\)를 붙이면 \(B+C\)가 더 높다.
+Greedy selects \(A\) because \(U(A)>U(B)\). But when the same \(C\) is added, \(B+C\) becomes better.
 }
 \end{column}
 \begin{column}{0.48\textwidth}
@@ -769,40 +769,40 @@ Greedy는 \(U(A)>U(B)\)라서 \(A\)를 고른다. 하지만 같은 \(C\)를 붙�
 
 \vspace{0.25em}
 {\footnotesize
-처음엔 \(A\)가 더 좋아 보이지만, \(B\)가 \(D\)와 만나면 더 큰 trajectory utility를 만든다.
+At first, \(A\) looks better, but \(B\) creates a higher trajectory utility when paired with \(D\).
 }
 \end{column}
 \end{columns}
 
 \vspace{0.25em}
-\begin{alertblock}{의미}
+\begin{alertblock}{Takeaway}
 \small
-중간 reward가 있어도 \(A\), \(B\)를 각각 따로 평가하면 \(A\)가 더 좋아 보인다. 문제는 reward의 위치가 아니라, 한 검사의 가치가 \textbf{이후 어떤 검사와 결합되는지}에 따라 달라진다는 점이다.
+Even with intermediate rewards, evaluating \(A\) and \(B\) independently makes \(A\) look better. The issue is not where the reward is placed, but that the value of one test depends on \textbf{which later tests it is combined with}.
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{그래서 어떻게?}
+\begin{frame}{So What Can We Do?}
 \vspace{0.25em}
 
 \begin{columns}[T,onlytextwidth]
 \begin{column}{0.48\textwidth}
 \begin{block}{1. Bayesian network}
 \small
-\textbf{설명}\\
-검사 간 조건부 의존성을 명시적으로 모델링하고, evidence가 추가될 때 posterior를 업데이트한다.
+\textbf{Description}\\
+Explicitly models conditional dependencies between tests and updates the posterior as evidence is added.
 
 \vspace{0.55em}
-\textbf{장점}
+\textbf{Pros}
 \begin{itemize}
-  \item 조합 효과와 redundancy를 원리적으로 다룰 수 있다
-  \item query order를 probabilistic하게 정의할 수 있다
+  \item Can handle combination effects and redundancy in principle
+  \item Can define query order probabilistically
 \end{itemize}
 
 \vspace{0.25em}
-\textbf{단점}
+\textbf{Cons}
 \begin{itemize}
-  \item 자연어 report를 discrete variable로 바꾸기 어렵다
-  {\scriptsize 예: CT report \(\rightarrow\) severe: yes/no로 줄이면 표현력이 감소}
+  \item Hard to convert natural-language reports into discrete variables
+  {\scriptsize e.g., CT report \(\rightarrow\) severe: yes/no reduces expressiveness}
 \end{itemize}
 \end{block}
 \end{column}
@@ -810,20 +810,20 @@ Greedy는 \(U(A)>U(B)\)라서 \(A\)를 고른다. 하지만 같은 \(C\)를 붙�
 \begin{column}{0.48\textwidth}
 \begin{block}{2. \(n\)-step lookahead training}
 \small
-\textbf{설명}\\
-현재 검사 하나만 보지 않고, \(n\) step 뒤 가능한 조합의 utility를 미리 측정해 학습 신호로 쓴다.
+\textbf{Description}\\
+Instead of evaluating only the current test, measure the utility of possible \(n\)-step combinations ahead and use it as a learning signal.
 
 \vspace{0.45em}
-\textbf{장점}
+\textbf{Pros}
 \begin{itemize}
-  \item 전체 subset을 다 label하지 않아도 된다
-  \item 작은 조합의 synergy를 직접 학습시킬 수 있다
+  \item Does not require labeling all subsets
+  \item Can directly teach synergy in small combinations
 \end{itemize}
 
 \vspace{0.2em}
-\textbf{단점}
+\textbf{Cons}
 \begin{itemize}
-  \item computational cost가 exponential하게 증가한다
+  \item Computational cost grows exponentially
 \end{itemize}
 
 \vspace{0.15em}
@@ -852,7 +852,7 @@ Max step & Subsets & Coverage \\
 \begin{frame}[plain]
 \centering
 \vfill
-{\Huge\bfseries 감사합니다}
+{\Huge\bfseries Thank You}
 \vfill
 \end{frame}
 

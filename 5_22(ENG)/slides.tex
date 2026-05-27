@@ -64,8 +64,8 @@
 \setbeamerfont{subtitle}{size=\normalsize}
 \setbeamerfont{frametitle}{series=\bfseries}
 
-\title[]{Survey of Sequential Clinical Diagnosis with MIMIC-CDM}
-\subtitle{Focusing on Path Supervision and Stopping}
+\title[]{LLM-Based Sequential Clinical Diagnosis}
+\subtitle{Recent Progress and Open Challenges}
 \author[]{SeoJun Ha}
 \institute{DGIST}
 \date{May 22, 2026}
@@ -121,13 +121,24 @@ shifting LLM diagnosis from ``full-information classification'' to learning ``wh
 We have the ground-truth diagnosis label, but \textbf{we do not have labels for good diagnostic paths}. Recent studies therefore fill this gap with different proxies, without directly observing the optimal trajectory.
 \end{block}
 
-\vspace{0.75em}
-\begin{itemize}
-\small
-  \item \textbf{LA-CDM}: RL that optimizes diagnostic accuracy and test cost
-  \item \textbf{LDTL}: treats the full trajectory as latent and approximates it with one-step information gain
-  \item \textbf{SIFT}: RL with intermediate rewards for retrieving more high-quality evidence
-\end{itemize}
+\vspace{0.9em}
+\begin{center}
+\begin{tikzpicture}[
+  trajnode/.style={draw=LineGray, rounded corners=2pt, fill=white, align=center, minimum width=1.55cm, minimum height=0.78cm, font=\scriptsize},
+  trajarrow/.style={-{Latex[length=2.4mm]}, thick, draw=AccentOrange}
+]
+\node[trajnode] (init) at (0,0) {Initial};
+\node[trajnode] (a) at (2.05,0) {\(a\)};
+\node[trajnode] (b) at (4.10,0) {\(b\)};
+\node[trajnode] (c) at (6.15,0) {\(c\)};
+\node[trajnode, minimum width=1.85cm, fill=SoftOrange] (diag) at (8.35,0) {Diagnosis};
+
+\draw[trajarrow] (init) -- (a);
+\draw[trajarrow] (a) -- (b);
+\draw[trajarrow] (b) -- (c);
+\draw[trajarrow] (c) -- (diag);
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 \begin{frame}{MIMIC-CDM Dataset}
@@ -317,18 +328,31 @@ This reward is used only in the \textbf{efficient action selection phase}. Hypot
 
 \begin{frame}{LDTL: Motivation}
 \vspace{0.1em}
-\begin{block}{1. LLM diagnosis does not explicitly model test selection}
-\small
-LLM-based diagnostic systems can generate diagnoses, but they do not explicitly model \textbf{which tests should be selected and in what order}, as in real clinical pathways.
-\end{block}
-
-\vspace{0.35em}
-\begin{block}{2. Terminal reward is insufficient for trajectory learning}
+\begin{block}{Terminal reward is insufficient for trajectory learning}
 \small
 Optimizing performance and cost only through terminal reward does not directly control the \textbf{structure or distribution of diagnostic trajectories}. This can be unstable with limited clinical trajectories and provides weak supervision for desirable paths.
 \end{block}
 
-\vspace{0.35em}
+\vspace{0.55em}
+\begin{center}
+\begin{tikzpicture}[
+  tnode/.style={draw=LineGray, rounded corners=2pt, fill=white, align=center, minimum width=1.35cm, minimum height=0.62cm, font=\scriptsize},
+  tarrow/.style={-{Latex[length=2.2mm]}, thick, draw=AccentOrange}
+]
+\node[tnode] (s) at (0,0) {Initial};
+\node[tnode] (a) at (1.75,0) {\(a\)};
+\node[tnode] (b) at (3.50,0) {\(b\)};
+\node[tnode] (c) at (5.25,0) {\(c\)};
+\node[tnode, fill=SoftOrange, minimum width=1.55cm] (r) at (7.15,0) {Reward};
+
+\draw[tarrow] (s) -- (a);
+\draw[tarrow] (a) -- (b);
+\draw[tarrow] (b) -- (c);
+\draw[tarrow] (c) -- (r);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.45em}
 \begin{block}{LDTL Problem Setting}
 \small
 LDTL formulates test selection as a \textbf{Latent Diagnostic Trajectory Learning} problem and constructs action signals based on diagnostic improvement rather than simple rewards.
@@ -343,10 +367,10 @@ LDTL formulates test selection as a \textbf{Latent Diagnostic Trajectory Learnin
 \vspace{0.35em}
 \begin{block}{Agent Roles}
 \small
-\textbf{Teacher agent}: generates action-wise diagnostic improvement signals from latent trajectories.
+\textbf{Planning LLM agent}: selects the next diagnostic action based on the current patient state.
 
 \vspace{0.2em}
-\textbf{Student agent}: learns the test selection policy using the teacher signal.
+\textbf{Diagnostic LLM agent}: predicts the disease label and confidence after new evidence is added.
 \end{block}
 \end{frame}
 

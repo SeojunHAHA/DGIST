@@ -665,6 +665,62 @@ $}
 {\footnotesize 결과 해석: evidence의 양보다 critical evidence ratio가 diagnostic success를 가장 강하게 설명한다.}
 \end{frame}
 
+\begin{frame}{예시: 검사 가치는 현재 state에 따라 달라진다}
+\centering
+\vspace{-0.05em}
+\includegraphics[
+  width=0.96\linewidth,
+  height=0.39\textheight,
+  keepaspectratio
+]{figures/image.png}
+
+\vspace{0.03em}
+{\scriptsize\textcolor{gray!70}{Source: American College of Gastroenterology (ACG) Clinical Guideline: Management of Acute Pancreatitis, 2013.}}
+
+\vspace{0.15em}
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.64\textwidth}
+\hspace*{-0.35cm}%
+\centering
+\includegraphics[
+  width=1.05\linewidth,
+  height=0.36\textheight,
+  keepaspectratio
+]{figures/image copy.png}
+\end{column}
+\hspace{-0.25cm}
+\begin{column}{0.33\textwidth}
+\begin{block}{Acute pancreatitis guideline 예시}
+\footnotesize
+급성 췌장염은 보통 \textbf{복통, amylase/lipase 상승, 영상 소견} 중 두 가지 이상이 만족될 때 진단된다.
+
+\vspace{0.18em}
+즉, 같은 검사라도 이전 evidence에 따라 marginal value가 달라진다.
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{LA-CDM 한계점}
+\centering
+\vspace{0.15em}
+\includegraphics[
+  width=0.48\linewidth,
+  height=0.34\textheight,
+  keepaspectratio
+]{figures/image copy 2.png}
+
+\vspace{0.25em}
+\begin{alertblock}{핵심}
+\footnotesize
+\begin{itemize}
+  \item LA-CDM은 여러 trajectory를 샘플링한 뒤, 최종 진단 정확도와 검사 cost의 trade-off로 좋은 path의 확률을 올린다.
+  \item 하지만 reward는 전체 path에 주어지기 때문에, 어떤 중간 action이 실제로 진단을 바꿨는지 분리하기 어렵다.
+  \item 특히 A 검사 이후에만 B 검사의 가치가 커지는 경우처럼, action 조합의 효과를 명시적으로 supervision하지 못한다.
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
 \begin{frame}{기존 방법들의 trajectory-level 접근}
 \vspace{0.0em}
 \centering

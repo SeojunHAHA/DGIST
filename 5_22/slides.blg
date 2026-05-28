@@ -1,9 +1,8 @@
-[0] Config.pm:328> INFO - This is Biber 2.21
-[0] Config.pm:331> INFO - Logfile is 'slides.blg'
-[31] biber-darwin:342> INFO - === Tue May 26, 2026, 23:41:14
-[39] Biber.pm:421> INFO - Reading 'slides.bcf'
-[79] Biber.pm:1002> INFO - Found 0 citekeys in bib section 0
-[89] bbl.pm:676> INFO - Writing 'slides.bbl' with encoding 'UTF-8'
-[89] bbl.pm:779> INFO - Output to slides.bbl
-[89] Biber.pm:132> WARN - The file 'slides.bcf' does not contain any citations!
-[89] Biber.pm:134> INFO - WARNINGS: 1
+[0] Config.pm:307> INFO - This is Biber 2.17
+[0] Config.pm:310> INFO - Logfile is 'slides.blg'
+[50] biber:340> INFO - === Wed May 27, 2026, 10:08:26
+[60] Biber.pm:418> INFO - Reading 'slides.bcf'
+[108] Utils.pm:398> ERROR - Error: Found biblatex control file version 3.11, expected version 3.8.
+This means that your biber (2.17) and biblatex (3.21) versions are incompatible.
+See compat matrix in biblatex or biber PDF documentation.
+[108] Biber.pm:135> INFO - ERRORS: 1

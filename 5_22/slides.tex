@@ -701,18 +701,44 @@ $}
 \end{columns}
 \end{frame}
 
+\begin{frame}{LA-CDM은 왜 RL을 선택했나?}
+\centering
+\vspace{0.3em}
+\includegraphics[
+  width=0.92\linewidth,
+  height=0.13\textheight,
+  keepaspectratio
+]{figures/la_cdm_rl_motivation.png}
+
+\vspace{0.6em}
+\begin{block}{내 해석}
+\footnotesize
+LA-CDM은 가능한 diagnostic pathway가 너무 많고, 각 환자에 대해 어떤 trajectory가 좋은지에 대한 ground truth가 없기 때문에 supervised learning 대신 정확도와 검사 비용을 보는 RL을 선택한다.
+
+\vspace{0.35em}
+하지만 여기서 역설적으로, \textbf{경우의 수가 너무 많다는 문제를 해결하기 위해 가장 많은 시도가 필요한 방법}을 택하게 된다. 즉, 좋은 path를 직접 알려주는 label이 없기 때문에 trial-and-error로 찾아야 하고, 조합 효과가 있는 trajectory는 충분히 탐색되지 않으면 reward가 드러나기 어렵다.
+\end{block}
+\end{frame}
+
 \begin{frame}{LA-CDM 한계점}
 \centering
-\vspace{0.15em}
+\vspace{0.05em}
 \includegraphics[
   width=0.48\linewidth,
-  height=0.34\textheight,
+  height=0.29\textheight,
   keepaspectratio
 ]{figures/image copy 2.png}
 
-\vspace{0.25em}
+\vspace{0.12em}
+\includegraphics[
+  width=0.90\linewidth,
+  height=0.11\textheight,
+  keepaspectratio
+]{figures/la_cdm_limitation_example.png}
+
+\vspace{0.12em}
 \begin{alertblock}{핵심}
-\footnotesize
+\scriptsize
 \begin{itemize}
   \item LA-CDM은 여러 trajectory를 샘플링한 뒤, 최종 진단 정확도와 검사 cost의 trade-off로 좋은 path의 확률을 올린다.
   \item 하지만 reward는 전체 path에 주어지기 때문에, 어떤 중간 action이 실제로 진단을 바꿨는지 분리하기 어렵다.

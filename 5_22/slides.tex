@@ -147,10 +147,10 @@ LLM diagnosis가 ``full information classification''에서 ``어떤 검사를 �
 \vspace{0.35em}
 \textbf{Disease list}
 \begin{itemize}
-\item appendicitis
-\item cholecystitis
-\item diverticulitis
-\item pancreatitis
+\item appendicitis (급성충수염)
+\item cholecystitis (급성담낭염)
+\item diverticulitis (급성게실염)
+\item pancreatitis (급성췌장염)
 \end{itemize}
 \end{block}
 \end{column}
@@ -226,58 +226,64 @@ Complete Blood Count, Basic Metabolic Panel, Comprehensive Metabolic Panel, Rena
 \end{block}
 \end{frame}
 
-\begin{frame}{LA-CDM: 방법}
-\vspace{0.1em}
+\begin{frame}[t]{LA-CDM: 방법}
+\vspace{-0.2em}
 \begin{center}
 \begin{tikzpicture}[
-  box/.style={draw=LineGray, rounded corners=2pt, fill=white, align=center, minimum width=2.25cm, minimum height=0.75cm, font=\scriptsize},
+  box/.style={draw=LineGray, rounded corners=2pt, fill=white, align=center, minimum width=1.85cm, minimum height=0.62cm, font=\scriptsize},
   train/.style={box, draw=LineGray, very thick, fill=SoftOrange},
   arr/.style={-{Latex[length=2.2mm]}, thick, draw=LineGray}
 ]
-\node[box] (env) {Clinical\\Environment};
-\node[train, right=0.65cm of env] (da) {Decision Agent\\test / diagnosis};
-\node[train, right=0.65cm of da] (ha) {Hypothesis Agent\\diagnosis + confidence};
-\node[box, below=0.6cm of da] (reward) {Reward\\accuracy - cost};
-\draw[arr] (env) -- (da);
-\draw[arr] (da) -- (ha);
-\draw[arr] (ha) -- (reward);
-\draw[arr] (reward) -- (da);
+\node[box] (state) {Observed\\patient state};
+\node[train, right=0.43cm of state] (ha) {Hypothesis Agent\\\(h_j, c_j\)};
+\node[train, right=0.43cm of ha] (da) {Decision Agent\\test / diagnosis};
+\node[box, right=0.43cm of da] (env) {Clinical\\Environment};
+\draw[arr] (state) -- (ha);
+\draw[arr] (ha) -- (da);
+\draw[arr] (da) -- (env);
+\draw[arr] (env.south) to[bend left=16] (state.south);
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.35em}
+\vspace{-0.05em}
 \begin{columns}[T,onlytextwidth]
-\begin{column}{0.48\textwidth}
+\begin{column}{0.50\textwidth}
 \begin{block}{Cyclic training objectives}
-\footnotesize
+\scriptsize
 \begin{enumerate}
-  \item \textbf{Hypothesis generation}\\
-  HA가 각 state에서 정답 diagnosis \(y_{\mathrm{true}}\)를 생성하도록 SFT.
-  \item \textbf{Uncertainty-awareness}\\
-  confidence가 \(J(h_j)=\mathbb{1}[h_j=y_{\mathrm{true}}]\)에 맞도록 GRPO calibration.
-  \item \textbf{Efficient action selection}\\
-  DA가 필요한 test와 stop/diagnosis를 GRPO로 학습.
+  \item \textbf{DA GRPO}: \(p_j,h_j,c_j\)를 보고 test 또는 diagnosis 선택.
+  \item \textbf{HA SFT}: 현재 state에서 정답 diagnosis \(y_{\mathrm{true}}\) 생성.
+  \item \textbf{HA confidence GRPO}: correct hypothesis는 high confidence, incorrect hypothesis는 low confidence가 보상되도록 log-scoring 학습.
 \end{enumerate}
+\vspace{-0.4em}
+{\tiny Cycle order: DA GRPO \(\rightarrow\) HA SFT \(\rightarrow\) HA confidence GRPO 반복.}
 \end{block}
 \end{column}
-\begin{column}{0.48\textwidth}
+\begin{column}{0.46\textwidth}
 \begin{block}{DA phase reward}
-\small
+\scriptsize
+\vspace{-0.4em}
+\[
+R_{\mathrm{DA}}=R_{\mathrm{diag}}+R_{\mathrm{format}}+R_{\mathrm{cost}}
+\]
+\vspace{-0.85em}
 \[
 R_{\mathrm{diag}}=
 \begin{cases}
 r_{\mathrm{pos}} & y_{\mathrm{pred}}=y_{\mathrm{true}}\\
-r_{\mathrm{neg}} & y_{\mathrm{pred}}\neq y_{\mathrm{true}}\\
-r_{\mathrm{invalid}} & \text{format error}
+r_{\mathrm{neg}} & y_{\mathrm{pred}}\neq y_{\mathrm{true}}
 \end{cases}
 \]
-\vspace{-0.4em}
+\vspace{-0.85em}
 \[
 R_{\mathrm{cost}}(T)=-\sum_{t_j\in T}c(t_j)
 \]
-\vspace{-0.1em}
-\footnotesize
-이 reward는 \textbf{efficient action selection phase}에서만 쓰인다. Hypothesis SFT와 confidence calibration은 별도 objective로 cycle 안에서 번갈아 학습된다.
+\vspace{-0.6em}
+\begin{itemize}
+\itemsep0.1em
+  \item \(R_{\mathrm{format}}\): output format 위반 penalty.
+  \item 이 reward는 DA action-selection phase에 사용.
+\end{itemize}
 \end{block}
 \end{column}
 \end{columns}
@@ -653,52 +659,76 @@ $}
 \end{columns}
 \end{frame}
 
-\begin{frame}[t]{SIFT: 결과와 의미}
+\begin{frame}{기존 방법들의 접근}
+\vspace{-0.15em}
 \centering
-\vspace{0.25em}
-\includegraphics[width=0.98\linewidth,height=0.51\textheight,keepaspectratio]{figures/SIFT/result_evidence_quality.png}
+\begin{tikzpicture}[scale=1.08, transform shape,
+  node/.style={draw=LineGray, rounded corners=2pt, align=center, minimum width=1.55cm, minimum height=0.94cm, font=\scriptsize, fill=white},
+  wide/.style={node, minimum width=2.05cm},
+  tag/.style={font=\scriptsize\bfseries, text=primary},
+  edge/.style={-{Latex[length=2.3mm]}, thick, draw=LineGray},
+  note/.style={font=\scriptsize, text=TextGray, align=center}
+]
+\node[tag, anchor=east] at (-5.25,1.45) {LA-CDM};
+\node[node] (la1) at (-4.35,1.45) {\(S\)\\initial};
+\node[node] (la2) at (-2.55,1.45) {\(A\)\\{\tiny reward \(?\)}};
+\node[node] (la3) at (-0.75,1.45) {\(B\)\\{\tiny reward \(?\)}};
+\node[node] (la4) at (1.05,1.45) {\(C\)\\{\tiny reward \(?\)}};
+\node[wide] (la5) at (3.2,1.45) {END\\{\scriptsize acc - cost}};
+\draw[edge] (la1.east) -- (la2.west);
+\draw[edge] (la2.east) -- (la3.west);
+\draw[edge] (la3.east) -- (la4.west);
+\draw[edge] (la4.east) -- (la5.west);
+\node[font=\footnotesize\bfseries, text=red!70!black, align=center] at (-0.15,0.48)
+{문제점: 마지막에 맞췄는지만 보고 그 path의 확률을 올리면\\
+어떤 step이 좋았는지 알 수 없다.};
 
-\vspace{0.3em}
-\includegraphics[width=0.86\linewidth,height=0.26\textheight,keepaspectratio]{figures/SIFT/result_logistic_regression.png}
+\node[tag, anchor=east] at (-5.25,-0.70) {LDTL};
+\node[node] (l1) at (-4.35,-0.70) {\(S\)\\initial};
+\node[node] (l2) at (-2.55,-0.70) {\(A\)};
+\node[node] (l3) at (-0.75,-0.70) {\(B\)};
+\node[node] (l4) at (1.05,-0.70) {\(C\)};
+\node[wide] (l5) at (3.2,-0.70) {END\\accuracy};
+\draw[edge] (l1.east) -- (l2.west);
+\draw[edge] (l2.east) -- (l3.west);
+\draw[edge] (l3.east) -- (l4.west);
+\draw[edge] (l4.east) -- (l5.west);
+\node[note] at (-1.10,-1.55) {full information으로\\diagnostic LLM 학습};
+\node[note] at (3.05,-1.55) {한 step 추가 시\\정답 confidence 상승 학습};
 
-\vspace{0.45em}
-{\footnotesize 결과 해석: evidence의 양보다 critical evidence ratio가 diagnostic success를 가장 강하게 설명한다.}
+\node[tag, anchor=east] at (-5.25,-2.35) {SIFT};
+\node[node] (s1) at (-4.35,-2.35) {\(S\)\\initial};
+\node[node] (s2) at (-2.55,-2.35) {\(A\)\\{\tiny score \(1\)}};
+\node[node] (s3) at (-0.75,-2.35) {\(B\)\\{\tiny score \(3\)}};
+\node[node] (s4) at (1.05,-2.35) {\(C\)\\{\tiny score \(2\)}};
+\node[wide] (s5) at (3.2,-2.35) {END\\{\scriptsize \(R(\tau)=1+3+2\)}};
+\draw[edge] (s1.east) -- (s2.west);
+\draw[edge] (s2.east) -- (s3.west);
+\draw[edge] (s3.east) -- (s4.west);
+\draw[edge] (s4.east) -- (s5.west);
+\node[note] at (-1.25,-3.20) {trajectory \(\tau=\{(a_t,o_t)\}\) 안에서\\critical facts를 얼마나 회수했는지 측정};
+\end{tikzpicture}
 \end{frame}
 
 \begin{frame}{예시: 검사 가치는 현재 state에 따라 달라진다}
 \centering
-\vspace{-0.05em}
+\vspace{-0.45em}
 \includegraphics[
   width=0.96\linewidth,
   height=0.39\textheight,
   keepaspectratio
-]{figures/image.png}
-
-\vspace{0.03em}
-{\scriptsize\textcolor{gray!70}{Source: American College of Gastroenterology (ACG) Clinical Guideline: Management of Acute Pancreatitis, 2013.}}
+]{figures/Pancreatitis 예시.png}
+\par\vspace{-0.05em}
+{\tiny\textcolor{gray!70}{Source: Greenberg et al., ``Clinical practice guideline: management of acute pancreatitis,'' Canadian Journal of Surgery (2016).}}
 
 \vspace{0.15em}
-\begin{columns}[T,totalwidth=\textwidth]
-\begin{column}{0.64\textwidth}
-\hspace*{-0.35cm}%
-\centering
 \includegraphics[
-  width=1.05\linewidth,
-  height=0.36\textheight,
+  width=0.96\linewidth,
+  height=0.34\textheight,
   keepaspectratio
-]{figures/image copy.png}
-\end{column}
-\hspace{-0.25cm}
-\begin{column}{0.33\textwidth}
-\begin{block}{Acute pancreatitis guideline 예시}
-\footnotesize
-급성 췌장염은 보통 \textbf{복통, amylase/lipase 상승, 영상 소견} 중 두 가지 이상이 만족될 때 진단된다.
-
-\vspace{0.18em}
-즉, 같은 검사라도 이전 evidence에 따라 marginal value가 달라진다.
-\end{block}
-\end{column}
-\end{columns}
+]{figures/Appendicitis 예시.png}
+\par\vspace{-0.05em}
+{\tiny\textcolor{gray!70}{Source: MedlinePlus, U.S. National Library of Medicine, ``Appendicitis Tests'' (2023).}}
 \end{frame}
 
 \begin{frame}{LA-CDM은 왜 RL을 선택했나?}
@@ -745,190 +775,6 @@ LA-CDM은 가능한 diagnostic pathway가 너무 많고, 각 환자에 대해 �
   \item 특히 A 검사 이후에만 B 검사의 가치가 커지는 경우처럼, action 조합의 효과를 명시적으로 supervision하지 못한다.
 \end{itemize}
 \end{alertblock}
-\end{frame}
-
-\begin{frame}{기존 방법들의 trajectory-level 접근}
-\vspace{0.0em}
-\centering
-\begin{tikzpicture}[scale=1.13, transform shape,
-  node/.style={draw=LineGray, rounded corners=2pt, align=center, minimum width=1.72cm, minimum height=1.02cm, font=\scriptsize, fill=white},
-  wide/.style={node, minimum width=2.35cm},
-  tag/.style={font=\scriptsize\bfseries, text=primary},
-  edge/.style={-{Latex[length=2.3mm]}, thick, draw=LineGray},
-  note/.style={font=\scriptsize, text=TextGray, align=center}
-]
-\node[tag, anchor=east] at (-5.25,1.45) {LDTL};
-\node[node] (l1) at (-4.35,1.45) {\(S\)\\initial};
-\node[node] (l2) at (-2.55,1.45) {\(A\)};
-\node[node] (l3) at (-0.75,1.45) {\(B\)};
-\node[node] (l4) at (1.05,1.45) {\(C\)};
-\node[wide] (l5) at (3.2,1.45) {END\\accuracy};
-\draw[edge] (l1) -- (l2);
-\draw[edge] (l2) -- (l3);
-\draw[edge] (l3) -- (l4);
-\draw[edge] (l4) -- (l5);
-\node[note] at (-0.55,0.55) {trajectory \(z=(A,B,C)\)를 만들고};
-\node[note] at (3.2,0.55) {끝의 정답 confidence /\\accuracy를 보고 따라감};
-
-\node[tag, anchor=east] at (-5.25,-1.10) {SIFT};
-\node[node] (s1) at (-4.35,-1.10) {\(S\)\\initial};
-\node[node] (s2) at (-2.55,-1.10) {\(A\)\\{\tiny score \(0\)}};
-\node[node] (s3) at (-0.75,-1.10) {\(B\)\\{\tiny score \(3\)}};
-\node[node] (s4) at (1.05,-1.10) {\(C\)\\{\tiny score \(2\)}};
-\node[wide] (s5) at (3.2,-1.10) {END\\{\scriptsize \(R(\tau)=0+3+2\)}};
-\draw[edge] (s1) -- (s2);
-\draw[edge] (s2) -- (s3);
-\draw[edge] (s3) -- (s4);
-\draw[edge] (s4) -- (s5);
-\node[note] at (-1.25,-2.02) {trajectory \(\tau=\{(a_t,o_t)\}\) 안에서\\critical facts를 얼마나 회수했는지 측정};
-\node[font=\tiny, text=TextGray, align=center] at (3.2,-2.42) {\(R(\tau)=(\alpha CR+\beta)acc+\eta CR-\lambda t/T\)};
-\end{tikzpicture}
-
-\vspace{0.35em}
-\begin{alertblock}{두 연구의 기본 가정}
-\small
-하나의 검사가 주는 정보량이 비교적 \textbf{독립적}이라고 본다. 즉, 어떤 검사 결과를 이미 알았다는 사실이 다른 검사를 추가했을 때의 예측 변화에 크게 영향을 주지 않는다고 가정하는 셈이다.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{Greedy가 실패하는 이유는 중간 reward 부재가 아니다}
-\vspace{0.1em}
-\begin{columns}[T,onlytextwidth]
-\begin{column}{0.48\textwidth}
-\centering
-{\large\bfseries\textcolor{primary}{Example 1: same second test \(C\)}}
-
-\vspace{0.25em}
-\begin{tikzpicture}[
-  node distance=1.1cm and 1.55cm,
-  state/.style={draw, rounded corners=2pt, align=center, minimum width=1.55cm, minimum height=0.82cm, font=\scriptsize, fill=white},
-  good/.style={draw=primary, very thick, fill=SoftOrange},
-  better/.style={draw=secondary, very thick, fill=secondary!8},
-  edge/.style={->, thick},
-  gre/.style={->, very thick, primary},
-  alt/.style={->, very thick, secondary}
-]
-\node[state] (s) {Initial\\\(U=0.00\)};
-\node[state, good, below left=of s] (a) {\(A\)\\\(U=0.70\)};
-\node[state, below right=of s] (b) {\(B\)\\\(U=0.50\)};
-\node[state, below=of a] (ac) {\(A+C\)\\\(U=0.71\)};
-\node[state, better, below=of b] (bc) {\(B+C\)\\\(U=0.80\)};
-\draw[gre] (s) -- node[above left, font=\scriptsize] {\(A\)} (a);
-\draw[edge] (s) -- node[above right, font=\scriptsize] {\(B\)} (b);
-\draw[edge] (a) -- node[left, font=\scriptsize] {\(+C\)} (ac);
-\draw[alt] (b) -- node[right, font=\scriptsize] {\(+C\)} (bc);
-\end{tikzpicture}
-
-\vspace{0.25em}
-{\footnotesize
-Greedy는 \(U(A)>U(B)\)라서 \(A\)를 고른다. 하지만 같은 \(C\)를 붙이면 \(B+C\)가 더 높다.
-}
-\end{column}
-\begin{column}{0.48\textwidth}
-\centering
-{\large\bfseries\textcolor{primary}{Example 2: different second test}}
-
-\vspace{0.25em}
-\begin{tikzpicture}[
-  node distance=1.1cm and 1.55cm,
-  state/.style={draw, rounded corners=2pt, align=center, minimum width=1.55cm, minimum height=0.82cm, font=\scriptsize, fill=white},
-  good/.style={draw=primary, very thick, fill=SoftOrange},
-  better/.style={draw=secondary, very thick, fill=secondary!8},
-  edge/.style={->, thick},
-  gre/.style={->, very thick, primary},
-  alt/.style={->, very thick, secondary}
-]
-\node[state] (s2) {Initial\\\(U=0.00\)};
-\node[state, good, below left=of s2] (a2) {\(A\)\\\(U=0.70\)};
-\node[state, below right=of s2] (b2) {\(B\)\\\(U=0.50\)};
-\node[state, below=of a2] (ac2) {\(A+C\)\\\(U=0.72\)};
-\node[state, better, below=of b2] (bd2) {\(B+D\)\\\(U=0.82\)};
-\draw[gre] (s2) -- node[above left, font=\scriptsize] {\(A\)} (a2);
-\draw[edge] (s2) -- node[above right, font=\scriptsize] {\(B\)} (b2);
-\draw[edge] (a2) -- node[left, font=\scriptsize] {\(+C\)} (ac2);
-\draw[alt] (b2) -- node[right, font=\scriptsize] {\(+D\)} (bd2);
-\end{tikzpicture}
-
-\vspace{0.25em}
-{\footnotesize
-처음엔 \(A\)가 더 좋아 보이지만, \(B\)가 \(D\)와 만나면 더 큰 trajectory utility를 만든다.
-}
-\end{column}
-\end{columns}
-
-\vspace{0.25em}
-\begin{alertblock}{의미}
-\small
-중간 reward가 있어도 \(A\), \(B\)를 각각 따로 평가하면 \(A\)가 더 좋아 보인다. 문제는 reward의 위치가 아니라, 한 검사의 가치가 \textbf{이후 어떤 검사와 결합되는지}에 따라 달라진다는 점이다.
-\end{alertblock}
-\end{frame}
-
-\begin{frame}{그래서 어떻게?}
-\vspace{0.25em}
-
-\begin{columns}[T,onlytextwidth]
-\begin{column}{0.48\textwidth}
-\begin{block}{1. Bayesian network}
-\small
-\textbf{설명}\\
-검사 간 조건부 의존성을 명시적으로 모델링하고, evidence가 추가될 때 posterior를 업데이트한다.
-
-\vspace{0.55em}
-\textbf{장점}
-\begin{itemize}
-  \item 조합 효과와 redundancy를 원리적으로 다룰 수 있다
-  \item query order를 probabilistic하게 정의할 수 있다
-\end{itemize}
-
-\vspace{0.25em}
-\textbf{단점}
-\begin{itemize}
-  \item 자연어 report를 discrete variable로 바꾸기 어렵다
-  {\scriptsize 예: CT report \(\rightarrow\) severe: yes/no로 줄이면 표현력이 감소}
-\end{itemize}
-\end{block}
-\end{column}
-
-\begin{column}{0.48\textwidth}
-\begin{block}{2. \(n\)-step lookahead training}
-\small
-\textbf{설명}\\
-현재 검사 하나만 보지 않고, \(n\) step 뒤 가능한 조합의 utility를 미리 측정해 학습 신호로 쓴다.
-
-\vspace{0.45em}
-\textbf{장점}
-\begin{itemize}
-  \item 전체 subset을 다 label하지 않아도 된다
-  \item 작은 조합의 synergy를 직접 학습시킬 수 있다
-\end{itemize}
-
-\vspace{0.2em}
-\textbf{단점}
-\begin{itemize}
-  \item computational cost가 exponential하게 증가한다
-\end{itemize}
-
-\vspace{0.15em}
-\centering
-{\scriptsize
-\begin{tabular}{r r r}
-\toprule
-Max step & Subsets & Coverage \\
-\midrule
-1 & 12 & 0.29\% \\
-2 & 78 & 1.90\% \\
-3 & 298 & 7.28\% \\
-4 & 793 & 19.37\% \\
-5 & 1,585 & 38.71\% \\
-6 & 2,509 & 61.27\% \\
-7 & 3,301 & 80.61\% \\
-8 & 3,796 & 92.70\% \\
-\bottomrule
-\end{tabular}
-}
-\end{block}
-\end{column}
-\end{columns}
 \end{frame}
 
 \begin{frame}[plain]

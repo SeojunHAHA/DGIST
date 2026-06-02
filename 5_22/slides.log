@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.5.22)  27 MAY 2026 12:42
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.5.22)  2 JUN 2026 18:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1923,14 +1923,14 @@ File: figures/LA-CDM/main.png Graphic file (type bmp)
 [7
 
 ]
-LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <9> not avail
+LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <8> not available
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 290.
+LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <6> not available
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 290.
+LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <8> not avail
 able
 (Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 284.
-LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <9> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 284.
-LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <6> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 284.
+ line 290.
  [8
 
 ]
@@ -1947,14 +1947,11 @@ File: figures/LDTL/main.png Graphic file (type bmp)
 <figures/LDTL/main.png>
  [12
 
-]
-LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <8> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 442.
- [13
+] [13
 
 ]
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <10.95> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 470.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 476.
  [14
 
 ]
@@ -1976,26 +1973,24 @@ File: figures/SIFT/main.png Graphic file (type bmp)
 ]
 File: figures/SIFT/image.png Graphic file (type bmp)
 <figures/SIFT/image.png>
+LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <9> not available
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 605.
  [19
 
-] [20
+]
+LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <9> not avail
+able
+(Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
+ line 660.
+ [20
+
+] [21
 
 ]
-File: figures/SIFT/result_evidence_quality.png Graphic file (type bmp)
-<figures/SIFT/result_evidence_quality.png>
-File: figures/SIFT/result_logistic_regression.png Graphic file (type bmp)
-<figures/SIFT/result_logistic_regression.png>
- [21
-
-]
-File: figures/image.png Graphic file (type bmp)
-<figures/image.png>
-File: figures/image copy.png Graphic file (type bmp)
-<figures/image copy.png>
-
-Overfull \hbox (5.5159pt too wide) in paragraph at lines 702--702
- []| [] 
- []
+File: figures/Pancreatitis 예시.png Graphic file (type bmp)
+<figures/Pancreatitis 예시.png>
+File: figures/Appendicitis 예시.png Graphic file (type bmp)
+<figures/Appendicitis 예시.png>
 
 [22
 
@@ -2012,25 +2007,11 @@ File: figures/la_cdm_limitation_example.png Graphic file (type bmp)
  [24
 
 ]
-LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <8> not avail
-able
-(Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 792.
- [25
-
-]
-LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <12> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 864.
- [26
-
-] [27
-
-]
 LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <24.88> not a
 vailable
 (Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 939.
- [28
+ line 785.
+ [25
 
 ]
 \tf@nav=\write7
@@ -2061,12 +2042,12 @@ Package logreq Info: Writing requests to 'slides.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 54874 strings out of 477756
- 1271500 string characters out of 5843518
- 2164793 words of memory out of 5000000
- 74502 multiletter control sequences out of 15000+600000
- 479568 words of font info for 131 fonts, out of 8000000 for 9000
+ 54794 strings out of 477756
+ 1269786 string characters out of 5843518
+ 2162737 words of memory out of 5000000
+ 74431 multiletter control sequences out of 15000+600000
+ 477991 words of font info for 121 fonts, out of 8000000 for 9000
  264 hyphenation exceptions out of 8191
- 115i,16n,130p,2006b,5160s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 115i,14n,130p,2006b,5160s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on slides.pdf (28 pages).
+Output written on slides.pdf (25 pages).

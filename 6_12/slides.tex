@@ -1,0 +1,580 @@
+% Copyright (c) 2022 by Lars Spreng
+% This work is licensed under the Creative Commons Attribution 4.0 International License.
+
+\documentclass[
+11pt,notheorems,hyperref={pdfauthor=whatever}
+]{beamer}
+
+\usepackage{kotex}
+\input{loadslides.tex}
+
+\usepackage{fontspec}
+\IfFileExists{/Users/seojunha/Library/Fonts/NotoSansCJKkr-Regular.otf}{%
+  \setmainhangulfont[
+    Path=/Users/seojunha/Library/Fonts/,
+    BoldFont=NotoSansCJKkr-Bold.otf
+  ]{NotoSansCJKkr-Regular.otf}
+  \setsanshangulfont[
+    Path=/Users/seojunha/Library/Fonts/,
+    BoldFont=NotoSansCJKkr-Bold.otf
+  ]{NotoSansCJKkr-Regular.otf}
+  \setmonohangulfont[
+    Path=/Users/seojunha/Library/Fonts/,
+    BoldFont=NotoSansCJKkr-Bold.otf
+  ]{NotoSansCJKkr-Regular.otf}
+}{%
+  \IfFontExistsTF{Noto Sans CJK KR}{%
+    \setmainhangulfont{Noto Sans CJK KR}
+    \setsanshangulfont{Noto Sans CJK KR}
+    \setmonohangulfont{Noto Sans CJK KR}
+  }{%
+    \IfFontExistsTF{NanumGothic}{%
+      \setmainhangulfont{NanumGothic}
+      \setsanshangulfont{NanumGothic}
+      \setmonohangulfont{NanumGothic}
+    }{}%
+  }%
+}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds, shapes.geometric}
+\usepackage{booktabs}
+\usepackage{array}
+
+\definecolor{TextGray}{HTML}{333333}
+\definecolor{DeepBlue}{HTML}{08457E}
+\definecolor{SoftBlue}{HTML}{EAF0F8}
+\definecolor{LineGray}{HTML}{B8B8B8}
+\definecolor{WarnRed}{HTML}{B3261E}
+\definecolor{GoodGreen}{HTML}{237A4B}
+\definecolor{SoftGreen}{HTML}{EAF6EF}
+\definecolor{SoftRed}{HTML}{FBEAEA}
+\definecolor{SoftYellow}{HTML}{FFF4D8}
+\definecolor{SoftPurple}{HTML}{F1EAFE}
+
+\addtobeamertemplate{frametitle}{}{\vspace{-0.5em}}
+\setbeamerfont{title}{size=\LARGE,series=\bfseries}
+\setbeamerfont{subtitle}{size=\normalsize}
+\setbeamerfont{frametitle}{series=\bfseries}
+
+\tikzset{
+  state/.style={draw=DeepBlue, very thick, rounded corners=2pt, fill=SoftBlue, align=center, minimum width=1.55cm, minimum height=0.86cm, inner sep=4pt, font=\scriptsize\bfseries},
+  action/.style={draw=LineGray, rounded corners=2pt, fill=white, align=center, minimum width=1.25cm, minimum height=0.55cm, inner sep=3pt, font=\scriptsize},
+  lossbox/.style={draw=WarnRed, very thick, rounded corners=2pt, fill=SoftRed, align=center, minimum width=2.0cm, minimum height=0.55cm, inner sep=3pt, font=\scriptsize\bfseries},
+  bluebox/.style={draw=DeepBlue, very thick, rounded corners=2pt, fill=SoftBlue, align=center, minimum height=0.82cm, inner sep=5pt, font=\small\bfseries},
+  greenbox/.style={draw=GoodGreen, very thick, rounded corners=2pt, fill=SoftGreen, align=center, minimum height=0.82cm, inner sep=5pt, font=\small\bfseries},
+  redbox/.style={draw=WarnRed, very thick, rounded corners=2pt, fill=SoftRed, align=center, minimum height=0.82cm, inner sep=5pt, font=\small\bfseries},
+  yellowbox/.style={draw=orange!70!black, very thick, rounded corners=2pt, fill=SoftYellow, align=center, minimum height=0.82cm, inner sep=5pt, font=\small\bfseries},
+  purplebox/.style={draw=purple!70!black, very thick, rounded corners=2pt, fill=SoftPurple, align=center, minimum height=0.82cm, inner sep=5pt, font=\small\bfseries},
+  arrow/.style={-{Latex[length=2.6mm]}, thick, draw=DeepBlue},
+  grayarrow/.style={-{Latex[length=2.4mm]}, thick, draw=LineGray},
+  redarrow/.style={-{Latex[length=2.4mm]}, thick, draw=WarnRed},
+  greenarrow/.style={-{Latex[length=2.4mm]}, thick, draw=GoodGreen}
+}
+
+\newcommand{\smallgray}[1]{{\scriptsize\textcolor{gray!75}{#1}}}
+\newcommand{\smallblue}[1]{{\scriptsize\textcolor{DeepBlue}{#1}}}
+\newcommand{\term}[1]{\textbf{\textcolor{DeepBlue}{#1}}}
+
+\title[]{Sequential Clinical Diagnosis}
+\subtitle{Two possible research directions}
+\author[]{하서준}
+\institute{DGIST}
+\date{2026년 6월 12일}
+
+\begin{document}
+
+{
+\setbeamertemplate{footline}{}
+\begin{frame}
+  \titlepage
+  \vspace{-0.8em}
+  \begin{center}
+  \scriptsize
+  Confidence Calibration \(\cdot\) Lookahead Planner \(\cdot\) LA-CDM Step-Level Reward
+  \end{center}
+\end{frame}
+}
+\addtocounter{framenumber}{-1}
+
+\begin{frame}{미팅 목적}
+\vspace{0.2em}
+\begin{block}{논의하고 싶은 문제}
+\small
+Sequential clinical diagnosis에서 LLM agent가 \textbf{언제 어떤 검사를 요청하고, 언제 진단을 멈출지}를 더 잘 학습시키는 방법을 정리하고자 한다.
+\end{block}
+
+\vspace{0.5em}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{center}
+\begin{tikzpicture}
+\node[bluebox, minimum width=0.94\linewidth] {
+Direction 1\\
+\normalsize Confidence calibration first\\
+\small supervised planner
+};
+\end{tikzpicture}
+\end{center}
+\vspace{0.35em}
+\scriptsize
+Diagnostic Agent의 confidence를 먼저 보정하고, calibrated confidence를 이용해 lookahead teacher action을 만든다.
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{center}
+\begin{tikzpicture}
+\node[greenbox, minimum width=0.94\linewidth] {
+Direction 2\\
+\normalsize LA-CDM modification\\
+\small step-level DA loss
+};
+\end{tikzpicture}
+\end{center}
+\vspace{0.35em}
+\scriptsize
+LA-CDM rollout 구조는 유지하고, DA GRPO에 \(n\)-step future-aware reward를 추가한다.
+\end{column}
+\end{columns}
+
+\vspace{0.7em}
+\begin{alertblock}{핵심 질문}
+\small
+새로운 planner를 따로 학습할 것인가, 아니면 LA-CDM의 Decision Agent reward를 더 future-aware하게 바꿀 것인가?
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Background: LA-CDM 구조}
+\vspace{0.2em}
+\begin{center}
+\begin{tikzpicture}[node distance=1.05cm, scale=0.92, transform shape]
+\node[bluebox, minimum width=2.2cm] (state) {Patient state\\\smallgray{history + tests}};
+\node[greenbox, right=of state, minimum width=2.25cm] (ha) {Hypothesis Agent\\\smallgray{\(h_t, c_t\)}};
+\node[yellowbox, right=of ha, minimum width=2.25cm] (da) {Decision Agent\\\smallgray{test or diagnosis}};
+\node[purplebox, right=of da, minimum width=2.1cm] (env) {Environment\\\smallgray{reveal result}};
+\draw[arrow] (state) -- (ha);
+\draw[arrow] (ha) -- (da);
+\draw[arrow] (da) -- (env);
+\draw[arrow] (env.south) to[out=-90,in=-90,looseness=1.1] node[below, font=\scriptsize] {updated state} (state.south);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3em}
+\begin{block}{Training in LA-CDM}
+\small
+\begin{itemize}
+  \item HA SFT: partial state에서 ground-truth disease를 예측하도록 학습
+  \item HA confidence GRPO: generated hypothesis가 맞았는지에 따라 confidence calibration
+  \item DA GRPO: final diagnosis correctness와 test cost로 trajectory-level reward 부여
+\end{itemize}
+\end{block}
+
+\vspace{0.2em}
+\begin{alertblock}{현재 한계}
+\small
+DA reward는 trajectory 하나당 scalar reward이므로, trajectory 내부에서 \textbf{어떤 action이 언제 diagnostic confidence를 개선했는지}에 대한 credit assignment가 약하다.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Direction 1: Calibrated DA + Supervised Planner}
+\vspace{0.15em}
+\begin{center}
+\begin{tikzpicture}[node distance=0.85cm, scale=0.92, transform shape]
+\node[bluebox, minimum width=2.3cm] (s) {Partial state\\\(s_t\)};
+\node[greenbox, right=of s, minimum width=2.45cm] (diag) {Diagnostic Agent\\\(\hat{y}_t, c_t\)};
+\node[purplebox, right=of diag, minimum width=2.4cm] (look) {Explicit lookahead\\\smallgray{training only}};
+\node[yellowbox, right=of look, minimum width=2.3cm] (teach) {Teacher action\\\(a_t^*\)};
+\node[bluebox, below=0.72cm of teach, minimum width=2.3cm] (plan) {Planner Agent\\\(\pi_\phi\)};
+\draw[arrow] (s) -- (diag);
+\draw[arrow] (diag) -- (look);
+\draw[arrow] (look) -- (teach);
+\draw[arrow] (teach) -- (plan);
+\draw[grayarrow] (s.south) to[out=-90,in=180] (plan.west);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.25em}
+\begin{block}{Idea}
+\small
+먼저 Diagnostic Agent가 partial evidence에서 disease hypothesis와 calibrated confidence를 안정적으로 내도록 만든다. 그 다음, candidate test를 lookahead로 평가해서 planner의 supervised target을 만든다.
+\end{block}
+
+\vspace{0.15em}
+\begin{block}{Planner objective}
+\[
+\mathcal{L}_{plan}
+=
+-\log \pi_\phi(a_t^* \mid s_t, \hat{y}_t, c_t, \mathcal{A}_t)
+\]
+\end{block}
+\end{frame}
+
+\begin{frame}{Direction 1: Lookahead Teacher Construction}
+\vspace{0.1em}
+\begin{block}{Candidate action evaluation}
+\small
+현재 state \(s_t\)에서 후보 검사 \(a\)를 실행했을 때의 future state를 training data 안에서 구성한다.
+\[
+s_t^a = \mathrm{Update}(s_t, a)
+\]
+\[
+s_t^{a_1,a_2}
+=
+\mathrm{Update}(\mathrm{Update}(s_t,a_1),a_2)
+\]
+\end{block}
+
+\vspace{0.15em}
+\begin{block}{State value from calibrated Diagnostic Agent}
+\small
+training 중에는 true disease \(y\)를 알고 있으므로, future state의 diagnostic value를 다음처럼 둘 수 있다.
+\[
+V(s) = p_\theta(y \mid s)
+\]
+\[
+U(a_1,a_2)
+=
+V(s_t^{a_1,a_2})
+-
+\lambda \{C(a_1)+C(a_2)\}
+\]
+\[
+a_t^*
+=
+\argmax_{a_1}
+\max_{a_2} U(a_1,a_2)
+\]
+\end{block}
+
+\vspace{0.15em}
+\begin{alertblock}{주의점}
+\small
+이 방식은 training-only oracle supervision에 가깝다. Inference에서는 unrevealed test result에 접근하지 않고, planner가 lookahead-derived policy를 imitate한다.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Direction 2: LA-CDM에 Step-Level Loss 추가}
+\vspace{0.1em}
+\begin{block}{기존 LA-CDM DA GRPO}
+\small
+\[
+R_{\mathrm{traj}}
+=
+R_{\mathrm{diagnosis}}
++
+R_{\mathrm{format}}
+-
+\mathrm{test\ cost}
+\]
+\[
+\text{same } A_{\mathrm{traj}} \text{ is applied to all DA tokens in the trajectory}
+\]
+\end{block}
+
+\vspace{0.2em}
+\begin{alertblock}{문제}
+\small
+마지막에 맞춘 trajectory 전체의 확률은 올라가지만, \textbf{초반에 좋은 검사를 먼저 선택한 action}과 우연히 뒤에서 맞춘 action을 구분하기 어렵다.
+\end{alertblock}
+
+\vspace{0.2em}
+\begin{block}{Proposed change}
+\small
+기존 terminal trajectory advantage는 유지하되, 각 DA action \(a_t\)에 대해 \(n\)-step 뒤 HA hypothesis/confidence 변화를 이용한 \textbf{step-level lookahead advantage}를 추가한다.
+\[
+A_{i,t}^{final}
+=
+A_i^{terminal}
++
+\alpha \cdot w_t \cdot A_{i,t}^{lookahead}
+\]
+\small
+즉, 기존 LA-CDM의 안정적인 final diagnosis signal 위에 action별 credit assignment를 얹는다.
+\end{block}
+\end{frame}
+
+\begin{frame}{Direction 2: Trajectory Left-to-Right View}
+\vspace{0.25em}
+\begin{center}
+\begin{tikzpicture}[scale=0.95, transform shape]
+\node[state] (s0) at (0,0) {\(s_0\)\\\(h_0,c_0\)};
+\node[state] (s1) at (2.05,0) {\(s_1\)\\\(h_1,c_1\)};
+\node[state] (s2) at (4.10,0) {\(s_2\)\\\(h_2,c_2\)};
+\node[state] (s3) at (6.15,0) {\(s_3\)\\\(h_3,c_3\)};
+\node[state] (s4) at (8.20,0) {\(s_4\)\\final};
+
+\node[action] (a0) at (1.03,0.62) {\(a_0\)};
+\node[action] (a1) at (3.08,0.62) {\(a_1\)};
+\node[action] (a2) at (5.13,0.62) {\(a_2\)};
+\node[action] (a3) at (7.18,0.62) {\(a_3\)};
+
+\draw[arrow] (s0) -- (s1);
+\draw[arrow] (s1) -- (s2);
+\draw[arrow] (s2) -- (s3);
+\draw[arrow] (s3) -- (s4);
+
+\draw[redarrow, bend left=38] (s0.north) to node[above, font=\scriptsize] {\(a_0\) loss uses \(V_3 - V_0\)} (s3.north);
+\draw[redarrow, bend right=32] (s1.south) to node[below, font=\scriptsize] {\(a_1\) loss uses \(V_4 - V_1\)} (s4.south);
+\draw[greenarrow, bend left=32] (s2.north) to node[above, font=\scriptsize] {\(a_2\) uses final if shorter} (s4.north);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.35em}
+\begin{block}{Value definition}
+\small
+\[
+V_t =
+\begin{cases}
+c_t, & h_t = y \\
+-c_t, & h_t \neq y \\
+0, & \text{invalid hypothesis/confidence}
+\end{cases}
+\]
+\end{block}
+
+\vspace{0.05em}
+\begin{block}{\(n\)-step diagnostic improvement reward}
+\small
+\[
+r_{i,t}^{lookahead}
+=
+V_{i,\min(t+n,T_i)}
+-
+V_{i,t}
+-
+\lambda C(a_{i,t})
+\]
+\[
+A_{i,t}^{lookahead}
+=
+\frac{r_{i,t}^{lookahead}-\mu_{\mathrm{group}}}
+{\sigma_{\mathrm{group}}+\epsilon}
+\]
+\scriptsize
+처음에는 같은 patient의 8 rollout에서 나온 모든 valid step reward를 하나의 group으로 묶어 normalize한다.
+\end{block}
+\end{frame}
+
+\begin{frame}{Direction 2: Proposed DA Loss}
+\vspace{0.15em}
+\begin{block}{기존}
+\small
+\[
+\mathcal{L}_{DA}
+=
+- A_{\mathrm{traj}}
+\sum_i \log \pi_\theta(x_i)
+\]
+\small
+trajectory 안의 모든 DA token이 같은 advantage를 받는다.
+\end{block}
+
+\vspace{0.15em}
+\begin{block}{변경}
+\small
+\[
+A_{i,t}^{final}
+=
+A_i^{terminal}
++
+\alpha \cdot w_t \cdot A_{i,t}^{lookahead}
+\]
+\[
+\mathcal{L}_{DA}
+=
+-\sum_{i,t}\sum_{k\in \mathcal{S}_{i,t}}
+\left[
+\rho_{i,k} A_{i,t}^{final}
+-
+\beta_{\mathrm{KL}}D_{\mathrm{KL},i,k}
+\right]
+\]
+\small
+여기서 \(\mathcal{S}_{i,t}\)는 rollout \(i\)의 step \(t\)에서 생성된 DA token span이다.
+\end{block}
+\end{frame}
+
+\begin{frame}{Direction 2: Step Weighting}
+\vspace{0.1em}
+\begin{block}{왜 step weight가 필요한가?}
+\small
+기존 LA-CDM은 final terminal reward로 만든 하나의 \(A_i^{terminal}\)을 trajectory 안의 모든 DA action token에 동일하게 적용한다. 따라서 첫 번째 검사, 두 번째 검사, 마지막 diagnosis action이 모두 같은 credit을 받는다. Step weighting은 이 uniform terminal credit 위에 \textbf{각 action의 temporal contribution}을 구분해서 얹기 위한 장치다.
+\end{block}
+
+\vspace{0.2em}
+\begin{block}{Main proposal: position-aware step weight}
+\small
+\[
+w_t = \min\left(1,\frac{t+1}{K}\right)
+\]
+\[
+A_{i,t}^{final}
+=
+A_i^{terminal}
++
+\alpha \cdot w_t \cdot A_{i,t}^{lookahead}
+\]
+\scriptsize
+예: \(K=3\)이면 step 0은 \(0.33\), step 1은 \(0.67\), step 2 이후는 \(1.0\)의 lookahead signal을 받는다. 즉 terminal reward의 ``모든 step 동일 credit''을 유지하되, 후속 evidence에 가까운 action일수록 더 직접적인 lookahead correction을 받도록 한다.
+\end{block}
+
+\vspace{0.15em}
+\begin{block}{Ablation candidates}
+\scriptsize
+\begin{tabular}{@{}p{0.30\textwidth}p{0.62\textwidth}@{}}
+\textbf{Uniform} & \(w_t=1\): 모든 step에 같은 lookahead weight \\
+\textbf{Position-aware} & \(w_t=\min(1,(t+1)/K)\): terminal reward의 uniform credit을 step position에 따라 보정 \\
+\textbf{Uncertainty} & \(w_t=1-c_t\): confidence가 낮을수록 action learning signal 증가 \\
+\end{tabular}
+\end{block}
+\end{frame}
+
+\begin{frame}{Direction 2: Token-Level Mapping}
+\vspace{0.1em}
+\begin{block}{한 번의 rollout 후, 한 번의 backward}
+\small
+각 step마다 따로 역전파하지 않는다. Rollout 8개를 끝까지 만든 뒤, token 위치별 advantage matrix를 구성해서 기존 GRPO loss처럼 한 번에 업데이트한다.
+\end{block}
+
+\vspace{0.2em}
+\begin{center}
+\begin{tikzpicture}[scale=0.88, transform shape]
+\node[action, minimum width=2.1cm] (t0) at (0,0) {step 0 tokens};
+\node[action, minimum width=2.1cm] (t1) at (2.7,0) {step 1 tokens};
+\node[action, minimum width=2.1cm] (t2) at (5.4,0) {step 2 tokens};
+\node[lossbox] (l0) at (0,-1.0) {\(A_{i,0}^{final}\)};
+\node[lossbox] (l1) at (2.7,-1.0) {\(A_{i,1}^{final}\)};
+\node[lossbox] (l2) at (5.4,-1.0) {\(A_{i,2}^{final}\)};
+\draw[redarrow] (l0) -- (t0);
+\draw[redarrow] (l1) -- (t1);
+\draw[redarrow] (l2) -- (t2);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2em}
+\begin{block}{Implementation view}
+\small
+\[
+\texttt{token\_advantages}
+=
+\texttt{terminal\_advantages.unsqueeze(1)}
++
+\alpha \cdot \texttt{step\_advantages}
+\]
+\scriptsize
+step advantage는 해당 DA action token span에만 채우고, 나머지 위치에는 0을 둔다.
+\end{block}
+\end{frame}
+
+\begin{frame}{Two Directions: Comparison}
+\vspace{0.1em}
+\begin{center}
+\scriptsize
+\begin{tabular}{p{0.23\textwidth}p{0.33\textwidth}p{0.33\textwidth}}
+\toprule
+ & \textbf{Direction 1} & \textbf{Direction 2} \\
+\midrule
+Main idea &
+Calibrated DA로 lookahead teacher를 만들고 planner를 supervised 학습 &
+LA-CDM DA GRPO에 \(n\)-step future-aware reward 추가 \\
+\addlinespace
+Change size &
+큼: planner supervision pipeline 필요 &
+작음: rollout 구조 유지, reward/loss 수정 \\
+\addlinespace
+Planning interpretation &
+명확한 explicit lookahead planning &
+lookahead-inspired credit assignment \\
+\addlinespace
+Risk &
+teacher construction과 oracle supervision 설명 필요 &
+HA confidence quality에 reward가 의존 \\
+\addlinespace
+First experiment &
+planner supervised imitation 성능 확인 &
+terminal-only vs weighted step-level advantage ablation \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.35em}
+\begin{alertblock}{현재 판단}
+\small
+시간과 구현 안정성을 고려하면 Direction 2를 먼저 실험하고, 효과가 있으면 Direction 1을 더 명시적인 planning extension으로 가져가는 전략이 현실적이다.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{논의할 질문}
+\vspace{0.2em}
+\begin{enumerate}
+\item 두 방향 중 우선순위를 어디에 둘 것인가?
+\vspace{0.4em}
+\item confidence calibration이 충분히 안정적이라면, 이를 state value로 써도 되는가?
+\vspace{0.4em}
+\item DA step-level lookahead reward는 어떤 형태가 좋은가?
+\[
+V_{t+n}-V_t
+\quad \text{vs.} \quad
+\sum_{i=0}^{n-1}\gamma^i(V_{t+i+1}-V_{t+i})
+\]
+\vspace{0.4em}
+\item final advantage는 다음 형태로 두는 것이 적절한가?
+\[
+A_{i,t}^{final}
+=
+A_i^{terminal}
++
+\alpha w_t A_{i,t}^{lookahead}
+\]
+\vspace{0.4em}
+\item step weight \(w_t\)는 어떤 방식이 좋은가?
+\[
+w_t=1
+\quad \text{vs.} \quad
+w_t=\min(1,(t+1)/K)
+\quad \text{vs.} \quad
+w_t=1-c_t
+\]
+\vspace{0.4em}
+\item 첫 ablation은 다음 정도로 충분한가?
+\begin{itemize}
+  \item LA-CDM terminal-only
+  \item terminal + uniform step lookahead
+  \item terminal + position-aware step lookahead
+  \item terminal + uncertainty-weighted step lookahead
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Proposed Next Step}
+\vspace{0.25em}
+\begin{block}{Implementation plan}
+\small
+\begin{enumerate}
+  \item Research2에서 LA-CDM rollout은 그대로 유지한다.
+  \item Trajectory에 DA step별 action token span을 저장한다.
+  \item HA hypothesis/confidence로 \(V_t\)를 계산한다.
+  \item 각 action에 \(n\)-step diagnostic improvement reward를 부여한다.
+  \item 기존 terminal advantage에 weighted step advantage를 추가한다.
+\end{enumerate}
+\end{block}
+
+\vspace{0.35em}
+\begin{block}{Recommended first setting}
+\small
+\[
+n=2,\quad \alpha=0.3,\quad K=3,\quad
+w_t=\min(1,(t+1)/K)
+\]
+\small
+Rollout 수는 GRPO group comparison을 위해 기존처럼 8개를 유지한다. Terminal advantage는 유지하고, lookahead term만 position-aware weight로 추가한다.
+\end{block}
+
+\vspace{0.25em}
+\begin{alertblock}{Main contribution candidate}
+\small
+Sequential diagnosis에서 final outcome만 보는 trajectory-level RL이 아니라, HA confidence 변화에 기반한 \textbf{future-aware step-level credit assignment}를 도입한다.
+\end{alertblock}
+\end{frame}
+
+\end{document}

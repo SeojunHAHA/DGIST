@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.5.22)  2 JUN 2026 18:02
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.5.22)  4 JUN 2026 14:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1924,13 +1924,9 @@ File: figures/LA-CDM/main.png Graphic file (type bmp)
 
 ]
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <8> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 290.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 299.
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <6> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 290.
-LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <8> not avail
-able
-(Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 290.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 299.
  [8
 
 ]
@@ -1951,7 +1947,7 @@ File: figures/LDTL/main.png Graphic file (type bmp)
 
 ]
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <10.95> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 476.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 485.
  [14
 
 ]
@@ -1974,29 +1970,38 @@ File: figures/SIFT/main.png Graphic file (type bmp)
 File: figures/SIFT/image.png Graphic file (type bmp)
 <figures/SIFT/image.png>
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <9> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 605.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 608.
  [19
 
 ]
 LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <9> not avail
 able
 (Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 660.
+ line 663.
  [20
 
-] [21
+]
+LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <8> not avail
+able
+(Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
+ line 714.
+ [21
 
 ]
 File: figures/Pancreatitis 예시.png Graphic file (type bmp)
 <figures/Pancreatitis 예시.png>
 File: figures/Appendicitis 예시.png Graphic file (type bmp)
 <figures/Appendicitis 예시.png>
+LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <6> not avail
+able
+(Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
+ line 754.
 
 [22
 
 ]
-File: figures/la_cdm_rl_motivation.png Graphic file (type bmp)
-<figures/la_cdm_rl_motivation.png>
+File: figures/RL사용이유.png Graphic file (type bmp)
+<figures/RL사용이유.png>
  [23
 
 ]
@@ -2010,7 +2015,7 @@ File: figures/la_cdm_limitation_example.png Graphic file (type bmp)
 LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <24.88> not a
 vailable
 (Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 785.
+ line 804.
  [25
 
 ]
@@ -2042,11 +2047,11 @@ Package logreq Info: Writing requests to 'slides.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 54794 strings out of 477756
- 1269786 string characters out of 5843518
- 2162737 words of memory out of 5000000
- 74431 multiletter control sequences out of 15000+600000
- 477991 words of font info for 121 fonts, out of 8000000 for 9000
+ 54808 strings out of 477756
+ 1269916 string characters out of 5843518
+ 2162625 words of memory out of 5000000
+ 74443 multiletter control sequences out of 15000+600000
+ 478007 words of font info for 123 fonts, out of 8000000 for 9000
  264 hyphenation exceptions out of 8191
  115i,14n,130p,2006b,5160s stack positions out of 5000i,500n,10000p,200000b,80000s
 

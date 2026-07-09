@@ -1,6 +1,6 @@
 [0] Config.pm:307> INFO - This is Biber 2.17
 [0] Config.pm:310> INFO - Logfile is 'slides.blg'
-[53] biber:340> INFO - === Fri Jun 12, 2026, 14:47:46
+[53] biber:340> INFO - === Sun Jul  5, 2026, 18:26:12
 [62] Biber.pm:418> INFO - Reading 'slides.bcf'
 [110] Biber.pm:972> INFO - Found 0 citekeys in bib section 0
 [118] bbl.pm:654> INFO - Writing 'slides.bbl' with encoding 'UTF-8'

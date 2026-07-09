@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.5.22)  12 JUN 2026 15:42
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.5.22)  15 JUN 2026 14:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1861,6 +1861,18 @@ LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <10.95> not a
 vailable
 (Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
  line 97.
+
+LaTeX Font Warning: Font shape `TU/lmss/bx/sc' undefined
+(Font)              using `TU/lmss/bx/n' instead on input line 97.
+
+
+LaTeX Font Warning: Font shape `TU/NotoSansCJKKR(0)/bx/sc' undefined
+(Font)              using `TU/NotoSansCJKKR(0)/bx/n' instead on input line 97.
+
+LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/sc' in size <10.95> not 
+available
+(Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
+ line 97.
 LaTeX Font Info:    Trying to load font information for U+msa on input line 97.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -1888,19 +1900,19 @@ ailable
 LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <12> not avai
 lable
 (Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 140.
-LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <8> not avail
-able
-(Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 140.
-LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <10> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 140.
-LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <7> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 140.
+ line 135.
 LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <10> not avai
 lable
 (Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
- line 140.
+ line 135.
+LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <10> not available
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 135.
+LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <7> not available
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 135.
+LaTeX Font Info:    Font shape `TU/NotoSansCJKKR(0)/bx/n' in size <8> not avail
+able
+(Font)              Font shape `TU/NotoSansCJKKR(0)/b/n' tried instead on input
+ line 135.
  [2
 
 ] [3
@@ -1915,18 +1927,22 @@ lable
 ] [7
 
 ]
-Overfull \hbox (3.20772pt too wide) in paragraph at lines 386--386
- [] 
- []
+LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <12> not available
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 359.
+ [8
 
-[8
+] [9
 
 ]
-LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <12> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 432.
- [9
+LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <10.95> not available
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 436.
+ [10
 
-] [10
+] [11
+
+] [12
+
+] [13
 
 ]
 \tf@nav=\write7
@@ -1949,12 +1965,12 @@ Package logreq Info: Writing requests to 'slides.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 54736 strings out of 477756
- 1267003 string characters out of 5843518
- 2167252 words of memory out of 5000000
- 74403 multiletter control sequences out of 15000+600000
- 476371 words of font info for 106 fonts, out of 8000000 for 9000
+ 54745 strings out of 477756
+ 1267300 string characters out of 5843518
+ 2157018 words of memory out of 5000000
+ 74409 multiletter control sequences out of 15000+600000
+ 477943 words of font info for 115 fonts, out of 8000000 for 9000
  264 hyphenation exceptions out of 8191
- 115i,11n,130p,2006b,5160s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 115i,14n,130p,2006b,5160s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on slides.xdv (10 pages, 165376 bytes).
+Output written on slides.xdv (13 pages, 183460 bytes).

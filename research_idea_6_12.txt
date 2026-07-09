@@ -1,0 +1,163 @@
+연구 아이디어 정리
+2026년 6월 12일
+
+이해를 돕기 위해 관련 PDF 그림 자료를 함께 첨부드립니다.
+
+
+1. 현재 상황
+
+현재 가장 큰 제약은 실험 비용입니다.
+
+학습 한 번이 짧게는 며칠, 길게는 1주일 정도 걸릴 수 있습니다.
+
+따라서 처음부터 구조를 크게 바꾸는 방향은 리스크가 큽니다.
+
+우선 기존 코드와 학습 구조를 최대한 유지하면서, 핵심 문제를 직접 건드릴 수 있는 수정이 필요합니다.
+
+
+2. 현재 보고 있는 문제
+
+기존 sequential clinical decision-making 방법들은 현재 action이 이후 진단 과정에 어떤 영향을 미치는지 행동 단위로 학습하기 어렵습니다.
+
+즉, 어떤 검사가 실제로 진단 개선에 기여했는지와 어떤 검사가 우연히 뒤따라왔는지를 구분하기 어렵습니다.
+
+이 문제는 특히 LA-CDM의 Decision Agent 학습에서 두드러집니다.
+
+
+3. LA-CDM의 한계
+
+LA-CDM은 Hypothesis Agent가 진단 가설과 confidence를 예측하고, Decision Agent가 다음 검사 또는 최종 진단을 선택하는 구조입니다.
+
+Decision Agent는 여러 rollout trajectory를 만든 뒤, 최종 진단 정확도와 검사 비용으로 trajectory-level reward를 계산합니다.
+
+문제는 이 reward가 trajectory 내부의 모든 Decision Agent action token에 동일하게 적용된다는 점입니다.
+
+최종적으로 맞춘 trajectory라면, 실제로 진단 개선에 크게 기여한 검사 선택과 우연히 뒤따라온 덜 유용한 선택이 같은 방향으로 강화될 수 있습니다.
+
+반대로 최종적으로 틀린 trajectory라면, 초기에 유용한 검사를 선택했더라도 함께 패널티를 받을 수 있습니다.
+
+결론적으로 LA-CDM은 행동별 기여도를 구분하기 어렵습니다.
+
+이는 action-level credit assignment 문제입니다.
+
+
+4. LDTL 계열 접근의 한계
+
+LDTL 계열 접근은 trajectory 전체 보상만 쓰는 방식보다 step-level signal을 주려는 방향에 가깝습니다.
+
+다만 한 단계 뒤 변화만 학습 신호로 사용하면, 특정 검사가 바로 진단 정확도나 confidence를 올리지는 않지만 이후 검사 또는 최종 진단을 가능하게 만드는 경우를 반영하기 어렵습니다.
+
+즉, 지연되어 나타나는 진단 가치를 학습하기 어렵습니다.
+
+
+5. 공통적인 문제
+
+현재 선택이 앞으로 어떤 영향을 미칠지 모델링하지 못합니다.
+
+각 검사 선택이 이후 진단 정확도와 confidence를 얼마나 개선하는지 행동 단위로 학습하기 어렵습니다.
+
+따라서 현재 action에 미래 가치를 반영하는 학습 신호가 필요합니다.
+
+
+6. 방향 A: LA-CDM에 단계별 가중치 부여
+
+가장 현실적인 첫 번째 방향은 LA-CDM 구조를 유지하면서 Decision Agent의 reward assignment만 수정하는 것입니다.
+
+기존 방식:
+
+trajectory 하나의 최종 reward를 모든 action token에 동일하게 적용합니다.
+
+제안 방식:
+
+각 action이 이후 진단 상태를 얼마나 개선했는지에 따라 action별로 다른 학습 신호를 부여합니다.
+
+구체적으로는 rollout trajectory 안에서 매 step마다 Hypothesis Agent의 진단 가설과 confidence를 기록합니다.
+
+이후 action a_t에 대해 n-step 뒤 상태의 진단 value가 현재 상태보다 얼마나 개선되었는지 계산합니다.
+
+예시:
+
+V_t = confidence, if hypothesis is correct
+
+V_t = -confidence, if hypothesis is incorrect
+
+action reward = V_{t+n} - V_t - test cost
+
+이렇게 계산한 action-level reward를 해당 action token span에만 적용합니다.
+
+즉, trajectory 전체에 같은 advantage를 주지 않고, step마다 다른 advantage를 줍니다.
+
+이 방향의 장점은 구현 비용이 낮다는 점입니다.
+
+LA-CDM의 rollout 구조, HA, DA, GRPO 학습 루프를 대부분 유지할 수 있습니다.
+
+수정할 핵심은 reward 계산과 DA loss 적용 방식입니다.
+
+따라서 현재 실험 비용 제약을 고려하면 우선 실험 후보로 가장 현실적입니다.
+
+
+7. 방향 B: Diagnosis Agent 기반 Lookahead Planner 학습
+
+두 번째 방향은 Diagnosis Agent와 Planner Agent를 분리하는 구조입니다.
+
+먼저 Diagnosis Agent를 학습합니다.
+
+목표는 partial patient state에서 진단을 잘 맞추고 confidence를 정확히 내도록 만드는 것입니다.
+
+이후 Planner는 후보 action들을 2-step 정도까지 넣어 보며, 어떤 action이 미래 진단 value를 가장 많이 올리는지 학습합니다.
+
+즉, Diagnosis Agent를 evaluator처럼 사용합니다.
+
+학습 시에는 candidate action을 선택했을 때의 미래 상태를 구성하고, 그 상태를 Diagnosis Agent가 평가합니다.
+
+예시:
+
+현재 상태 s_t에서 CT를 먼저 선택한 뒤 CBC를 선택한 경우
+
+현재 상태 s_t에서 CT를 먼저 선택한 뒤 Ultrasound를 선택한 경우
+
+현재 상태 s_t에서 CBC를 먼저 선택한 뒤 CT를 선택한 경우
+
+각 미래 상태의 value를 비교합니다.
+
+가장 높은 value를 만드는 첫 번째 action을 Planner의 teacher action으로 사용합니다.
+
+이 방향의 장점은 planning 구조가 명확하다는 점입니다.
+
+다만 구현 비용이 높습니다.
+
+Diagnosis Agent calibration, lookahead teacher action 생성, Planner supervised training이 필요합니다.
+
+따라서 단기 실험보다는 구조적인 확장 방향에 가깝습니다.
+
+
+8. 현재 우선순위
+
+현재는 방향 A를 먼저 검토하는 것이 현실적입니다.
+
+이유는 기존 LA-CDM 코드와 학습 구조를 가장 적게 바꾸면서 핵심 문제인 action-level credit assignment를 직접 다룰 수 있기 때문입니다.
+
+방향 A의 핵심은 다음과 같습니다.
+
+최종 reward는 유지합니다.
+
+하지만 trajectory 전체 action에 동일하게 뿌리지 않습니다.
+
+각 action이 n-step 뒤 진단 value를 얼마나 개선했는지 보고 action별 loss를 다르게 줍니다.
+
+방향 B는 장기적으로 더 명확한 planning framework로 확장할 수 있는 후보입니다.
+
+하지만 현재 학습 비용과 구현 리스크를 고려하면, 우선 방향 A로 빠르게 검증하는 것이 적절해 보입니다.
+
+
+9. 논의하고 싶은 지점
+
+첫째, LA-CDM의 DA GRPO에 action별 n-step diagnostic improvement reward를 추가하는 방향이 타당한지 논의하고 싶습니다.
+
+둘째, terminal reward와 action-level reward를 어떻게 섞는 것이 적절한지 논의가 필요합니다.
+
+셋째, n-step horizon을 2로 둘지 3으로 둘지 결정이 필요합니다.
+
+넷째, confidence를 value로 사용할 때 calibration이 충분히 필요한지 논의가 필요합니다.
+
+다섯째, 방향 B를 단기 실험 후보로 볼지, 후속 확장 방향으로 둘지 논의하고 싶습니다.

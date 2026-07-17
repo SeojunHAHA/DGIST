@@ -122,7 +122,7 @@
 
 \addtobeamertemplate{frametitle}{}{\vspace{-0.5em}}
 \setbeamerfont{title}{size=\LARGE,series=\bfseries}
-\setbeamerfont{subtitle}{size=\normalsize}
+\setbeamerfont{subtitle}{size=\large}
 \setbeamerfont{frametitle}{series=\bfseries}
 
 \tikzset{
@@ -141,11 +141,11 @@
 \newcommand{\term}[1]{\textbf{\textcolor{DeepBlue}{#1}}}
 \newcommand{\smallgray}[1]{{\scriptsize\textcolor{gray!75}{#1}}}
 
-\title[]{7/10 미팅}
-\subtitle{LLM-based Multi-Agent Systems에서의 Latent Communication 개요}
+\title[]{7/14 미팅}
+\subtitle{Dual-Channel Latent Communication for Clinical Diagnosis}
 \author[]{하서준}
 \institute{DGIST}
-\date{2026년 7월 10일}
+\date{2026년 7월 14일}
 
 \begin{document}
 
@@ -156,11 +156,14 @@
   \vspace{-0.8em}
   \begin{center}
   \scriptsize
-  Latent Communication \(\cdot\) Hidden States \(\cdot\) KV-Cache \(\cdot\) Multi-Agent LLMs
+  C2C \(\cdot\) LCF \(\cdot\) LR Agent \(\cdot\) LoRA Cache Handoff
   \end{center}
 \end{frame}
 }
 \addtocounter{framenumber}{-1}
+
+\input{rewrite_body.tex}
+\end{document}
 
 \begin{frame}[t]{왜 latent communication이 필요한가?}
 \scriptsize

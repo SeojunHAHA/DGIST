@@ -1,0 +1,170 @@
+% Copyright (c) 2022 by Lars Spreng
+% This work is licensed under the Creative Commons Attribution 4.0 International License.
+
+\documentclass[
+11pt,notheorems,hyperref={pdfauthor=whatever}
+]{beamer}
+
+\usepackage{kotex}
+\input{loadslides.tex}
+
+\usepackage{fontspec}
+\IfFontExistsTF{Pretendard}{%
+  \setmainfont[
+    UprightFont={Pretendard Medium},
+    BoldFont={Pretendard Bold},
+    ItalicFont={Pretendard Medium},
+    BoldItalicFont={Pretendard Bold}
+  ]{Pretendard}
+  \setsansfont[
+    UprightFont={Pretendard Medium},
+    BoldFont={Pretendard Bold},
+    ItalicFont={Pretendard Medium},
+    BoldItalicFont={Pretendard Bold}
+  ]{Pretendard}
+  \setmonofont[
+    UprightFont={Pretendard Medium},
+    BoldFont={Pretendard Bold},
+    ItalicFont={Pretendard Medium},
+    BoldItalicFont={Pretendard Bold}
+  ]{Pretendard}
+  \setmainhangulfont[
+    UprightFont={Pretendard Medium},
+    BoldFont={Pretendard Bold},
+    ItalicFont={Pretendard Medium},
+    BoldItalicFont={Pretendard Bold}
+  ]{Pretendard}
+  \setsanshangulfont[
+    UprightFont={Pretendard Medium},
+    BoldFont={Pretendard Bold},
+    ItalicFont={Pretendard Medium},
+    BoldItalicFont={Pretendard Bold}
+  ]{Pretendard}
+  \setmonohangulfont[
+    UprightFont={Pretendard Medium},
+    BoldFont={Pretendard Bold},
+    ItalicFont={Pretendard Medium},
+    BoldItalicFont={Pretendard Bold}
+  ]{Pretendard}
+}{%
+\IfFontExistsTF{NanumGothic}{%
+  \setmainfont[
+    UprightFont=NanumGothicBold,
+    BoldFont=NanumGothicBold
+  ]{NanumGothic}
+  \setsansfont[
+    UprightFont=NanumGothicBold,
+    BoldFont=NanumGothicBold
+  ]{NanumGothic}
+  \setmonofont[
+    UprightFont=NanumGothicBold,
+    BoldFont=NanumGothicBold
+  ]{NanumGothic}
+  \setmainhangulfont[
+    UprightFont=NanumGothicBold,
+    BoldFont=NanumGothicBold
+  ]{NanumGothic}
+  \setsanshangulfont[
+    UprightFont=NanumGothicBold,
+    BoldFont=NanumGothicBold
+  ]{NanumGothic}
+  \setmonohangulfont[
+    UprightFont=NanumGothicBold,
+    BoldFont=NanumGothicBold
+  ]{NanumGothic}
+}{%
+  \IfFontExistsTF{Nanum Gothic}{%
+    \setmainfont[
+      UprightFont=Nanum Gothic Bold,
+      BoldFont=Nanum Gothic Bold
+    ]{Nanum Gothic}
+    \setsansfont[
+      UprightFont=Nanum Gothic Bold,
+      BoldFont=Nanum Gothic Bold
+    ]{Nanum Gothic}
+    \setmonofont[
+      UprightFont=Nanum Gothic Bold,
+      BoldFont=Nanum Gothic Bold
+    ]{Nanum Gothic}
+    \setmainhangulfont[
+      UprightFont=Nanum Gothic Bold,
+      BoldFont=Nanum Gothic Bold
+    ]{Nanum Gothic}
+    \setsanshangulfont[
+      UprightFont=Nanum Gothic Bold,
+      BoldFont=Nanum Gothic Bold
+    ]{Nanum Gothic}
+    \setmonohangulfont[
+      UprightFont=Nanum Gothic Bold,
+      BoldFont=Nanum Gothic Bold
+    ]{Nanum Gothic}
+  }{}%
+}}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds, shapes.geometric}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{adjustbox}
+
+\definecolor{TextGray}{HTML}{333333}
+\definecolor{DeepBlue}{HTML}{08457E}
+\definecolor{SoftBlue}{HTML}{EAF0F8}
+\definecolor{LineGray}{HTML}{B8B8B8}
+\definecolor{WarnRed}{HTML}{B3261E}
+\definecolor{GoodGreen}{HTML}{237A4B}
+\definecolor{SoftGreen}{HTML}{EAF6EF}
+\definecolor{SoftRed}{HTML}{FBEAEA}
+\definecolor{SoftYellow}{HTML}{FFF4D8}
+\definecolor{SoftPurple}{HTML}{F1EAFE}
+
+\addtobeamertemplate{frametitle}{}{\vspace{-0.5em}}
+\setbeamerfont{title}{size=\LARGE,series=\bfseries}
+\setbeamerfont{subtitle}{size=\large}
+\setbeamerfont{frametitle}{series=\bfseries}
+
+\tikzset{
+  box/.style={draw=DeepBlue, very thick, rounded corners=2pt, fill=SoftBlue, align=center, minimum height=0.75cm, inner sep=5pt, font=\small\bfseries},
+  smallbox/.style={draw=LineGray, rounded corners=2pt, fill=white, align=center, minimum height=0.55cm, inner sep=4pt, font=\scriptsize},
+  greenbox/.style={draw=GoodGreen, very thick, rounded corners=2pt, fill=SoftGreen, align=center, minimum height=0.75cm, inner sep=5pt, font=\small\bfseries},
+  redbox/.style={draw=WarnRed, very thick, rounded corners=2pt, fill=SoftRed, align=center, minimum height=0.75cm, inner sep=5pt, font=\small\bfseries},
+  yellowbox/.style={draw=orange!70!black, very thick, rounded corners=2pt, fill=SoftYellow, align=center, minimum height=0.75cm, inner sep=5pt, font=\small\bfseries},
+  purplebox/.style={draw=purple!70!black, very thick, rounded corners=2pt, fill=SoftPurple, align=center, minimum height=0.75cm, inner sep=5pt, font=\small\bfseries},
+  arrow/.style={-{Latex[length=2.5mm]}, thick, draw=DeepBlue},
+  grayarrow/.style={-{Latex[length=2.2mm]}, thick, draw=LineGray},
+  redarrow/.style={-{Latex[length=2.2mm]}, thick, draw=WarnRed},
+  greenarrow/.style={-{Latex[length=2.2mm]}, thick, draw=GoodGreen}
+}
+
+\newcommand{\term}[1]{\textbf{\textcolor{DeepBlue}{#1}}}
+\newcommand{\smallgray}[1]{{\scriptsize\textcolor{gray!75}{#1}}}
+\newcommand{\kv}{\mathrm{KV}}
+\newcommand{\Flatten}{\mathrm{Flatten}}
+\newcommand{\Reshape}{\mathrm{Reshape}}
+\newcommand{\Concat}{\mathrm{Concat}}
+
+\title[]{7/20 미팅}
+\subtitle{HeteroMAS: Heterogeneous Agent를 위한 KV-Cache Communication}
+\author[]{하서준}
+\institute{DGIST}
+\date{2026년 7월 20일}
+
+\begin{document}
+
+{
+\setbeamertemplate{footline}{}
+\begin{frame}
+  \titlepage
+  \vspace{-0.8em}
+  \begin{center}
+  \scriptsize
+  LatentMAS \(\cdot\) RecursiveMAS \(\cdot\) Cache-to-Cache \(\cdot\) HeteroMAS
+  \end{center}
+\end{frame}
+}
+\addtocounter{framenumber}{-1}
+
+\input{rewrite_body.tex}
+\end{document}

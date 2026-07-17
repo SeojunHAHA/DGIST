@@ -1,0 +1,97 @@
+\begin{tikzpicture}[
+  x=1cm,
+  y=1cm,
+  font=\tiny,
+  line/.style={draw=black!78, line width=0.75pt},
+  arr/.style={-{Latex[length=2.0mm]}, draw=black!78, line width=0.75pt},
+  kv/.style={-{Latex[length=2.0mm]}, draw=black!78, line width=0.75pt},
+  txt/.style={align=center, text=black!88, font=\tiny},
+  side/.style={align=left, text=black!88, font=\tiny},
+  label/.style={align=center, text=black!88, font=\scriptsize}
+]
+
+% Canvas is intentionally close to the whiteboard sketch aspect.
+\path[use as bounding box] (-0.15,-3.12) rectangle (10.15,3.15);
+
+% Section labels
+\node[label] at (0.75,2.95) {Input};
+\node[label] at (3.30,2.95) {LoRA adapter\\+ KV};
+\node[label] at (6.25,2.95) {Decode phase};
+
+% --- reusable hand-sketch-like shapes ---
+% Input embeddings
+\draw[line] (0.12,1.15) -- (1.24,1.25) -- (1.14,2.45) -- (0.24,2.53) -- cycle;
+\node[txt] at (0.69,1.86) {Input\\[0.25em]embedding};
+
+\draw[line] (0.12,-2.42) -- (1.24,-2.29) -- (1.12,-0.78) -- (0.24,-0.67) -- cycle;
+\node[txt] at (0.69,-1.54) {Input\\[0.25em]embedding};
+
+% Upper LoRA / adapter blocks
+\draw[line] (1.70,1.35) -- (2.20,1.12) -- (2.25,2.18) -- (1.67,2.47) -- cycle;
+\node[txt] at (1.96,1.80) {Diagnosis};
+
+\draw[line] (3.35,1.15) -- (4.25,1.30) -- (4.12,2.55) -- (3.42,2.35) -- cycle;
+\node[txt] at (3.80,1.86) {Adapter};
+
+% Upper hidden/logit
+\draw[line] (5.18,1.12) rectangle (5.72,2.55);
+\node[txt, rotate=90] at (5.45,1.84) {Hidden state};
+
+\draw[line] (6.08,1.10) rectangle (6.42,2.55);
+\node[txt, rotate=90] at (6.25,1.84) {Logit};
+
+\node[side] at (7.42,1.94) {Diagnosis\\(if\ stop)};
+
+% Upper main arrows
+\draw[arr] (1.24,1.87) -- (1.67,1.87);
+\draw[arr] (2.25,1.87) -- (3.35,1.87);
+\draw[arr] (4.25,1.87) -- (5.18,1.87);
+\draw[arr] (5.72,1.87) -- (6.08,1.87);
+\draw[arr] (6.42,1.87) -- (7.25,1.87);
+
+% Middle module, positioned exactly between upper and lower paths
+\draw[line] (2.10,0.33) rectangle (4.85,0.72);
+\node[txt] at (3.48,0.52) {Middle module};
+
+% Upper KV down arrows
+\draw[kv] (1.96,1.12) -- (1.96,0.72);
+\draw[kv] (3.80,1.15) -- (3.80,0.72);
+\node[txt, font=\tiny] at (2.82,0.91) {KV 전달};
+
+% Upper hidden/logit side signal to middle module
+\draw[arr] (5.45,1.12) -- (5.45,0.52) -- (4.85,0.52);
+\draw[arr] (6.25,1.10) -- (6.25,0.30) -- (4.85,0.30);
+\node[side, font=\tiny] at (6.85,0.37) {Hidden state\\of embedding 고정?\\(성능 좋아야?)};
+
+% Middle to lower input and LoRA path
+\draw[arr] (2.10,0.52) -- (0.40,0.52) -- (0.40,-0.67);
+\draw[arr] (2.45,0.33) -- (2.45,-0.95);
+\draw[arr] (4.20,0.33) -- (4.20,-0.95);
+\node[txt, font=\tiny] at (3.42,-0.10) {KV 전달};
+
+% Lower LoRA / adapter blocks
+\draw[line] (1.70,-2.05) -- (2.22,-2.25) -- (2.25,-1.15) -- (1.65,-0.95) -- cycle;
+\node[txt] at (1.96,-1.60) {planner};
+
+\draw[line] (3.32,-2.25) -- (4.30,-1.95) -- (4.13,-0.92) -- (3.40,-1.18) -- cycle;
+\node[txt] at (3.82,-1.58) {Adapter};
+
+% Lower hidden/decode
+\draw[line] (5.18,-2.45) rectangle (5.72,-1.00);
+\node[txt, rotate=90] at (5.45,-1.73) {Hidden state};
+
+\draw[line] (6.05,-2.45) rectangle (6.55,-1.00);
+\node[txt, rotate=90] at (6.30,-1.73) {DECODE};
+
+\node[side] at (7.28,-1.52) {어떤 검사\\or stop};
+\node[side] at (7.38,-2.75) {stop이면 Diagnosis\\Adapter decode 진행};
+
+% Lower main arrows
+\draw[arr] (1.24,-1.55) -- (1.67,-1.55);
+\draw[arr] (2.25,-1.55) -- (3.32,-1.55);
+\draw[arr] (4.30,-1.55) -- (5.18,-1.55);
+\draw[arr] (5.72,-1.55) -- (6.05,-1.55);
+\draw[arr] (6.55,-1.55) -- (7.10,-1.55);
+\draw[arr] (7.70,-1.92) -- (7.70,-2.48);
+
+\end{tikzpicture}

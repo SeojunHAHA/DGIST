@@ -117,6 +117,11 @@ agent A가 만든 layer-wise KV cache를 agent B의 prefix memory처럼 붙인�
 \end{center}
 \end{frame}
 
+\begin{frame}{LatentMAS overview}
+\centering
+\includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{figures/LatentMAS.png}
+\end{frame}
+
 \begin{frame}{LatentMAS의 한계: heterogeneous setting}
 \small
 \begin{block}{논문 구조의 강한 가정}
@@ -185,6 +190,16 @@ agent 사이에는 주로 last-layer hidden representation을 adapter로 변환�
 \end{center}
 \end{frame}
 
+\begin{frame}{RecursiveLink}
+\centering
+\includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{figures/RecursiveLink.png}
+\end{frame}
+
+\begin{frame}{RecursiveMAS overview}
+\centering
+\includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{figures/RecursiveMAS.png}
+\end{frame}
+
 \begin{frame}{RecursiveMAS의 약점}
 \small
 \begin{columns}[T,onlytextwidth]
@@ -242,6 +257,15 @@ y_{i+1}=P\!\left(y_i \mid C_F(X)\oplus C(Y_{0:i})\right)
 \vspace{0.2em}
 \scriptsize
 C2C는 receiver가 이미 같은 input \(X\)를 prefill해서 만든 cache를 가지고 있고, 여기에 sharer cache를 residual하게 섞는 구조다.
+\end{frame}
+
+\begin{frame}[plain]
+\vspace*{0.25em}
+\noindent\makebox[0pt][l]{%
+\hspace*{-0.065\paperwidth}%
+\includegraphics[height=0.82\paperheight,keepaspectratio]{figures/C2C.png}\hspace{0.002\paperwidth}%
+\includegraphics[height=0.82\paperheight,keepaspectratio]{figures/LCF.png}%
+}
 \end{frame}
 
 \begin{frame}{C2C에서 fusion을 쓰는 이유}

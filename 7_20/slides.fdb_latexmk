@@ -1,14 +1,14 @@
 # Fdb version 3
-["biber slides"] 1784374707 "slides.bcf" "slides.bbl" "slides" 1784375050
-  "slides.bcf" 1784375050 123219 8c9998eb7e3bce1a8db37fba3cf0b744 "xelatex"
+["biber slides"] 1784374707 "slides.bcf" "slides.bbl" "slides" 1784466729
+  "slides.bcf" 1784466729 123219 8c9998eb7e3bce1a8db37fba3cf0b744 "xelatex"
   (generated)
   "slides.bbl"
   "slides.blg"
-["xdvipdfmx"] 1784375050 "slides.xdv" "slides.pdf" "slides" 1784375050
-  "slides.xdv" 1784375050 208720 b3057c07d7df09e6f39cdae7b5c76b3a "xelatex"
+["xdvipdfmx"] 1784466729 "slides.xdv" "slides.pdf" "slides" 1784466729
+  "slides.xdv" 1784466729 83520 144ce6ec4acee283e8146ebc33af2cac "xelatex"
   (generated)
   "slides.pdf"
-["xelatex"] 1784375048 "slides.tex" "slides.xdv" "slides" 1784375050
+["xelatex"] 1784466727 "slides.tex" "slides.xdv" "slides" 1784466729
   "/etc/texmf/web2c/texmf.cnf" 1779410985 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
@@ -325,16 +325,16 @@
   "/var/lib/texmf/web2c/xetex/xelatex.fmt" 1779411279 3721135 3b9fa9c56ff644845fa0ef832a9c1b34 ""
   "figures/C2C.png" 1784374724 72256 20057de6a44b69248b2899829224e3b0 ""
   "figures/LCF.png" 1784374764 75795 5996c4fe44d3fc9bfedf57e5fe3ca39e ""
-  "figures/LatentMAS.png" 1784374390 157543 5e0336c2edc7538b7b45bfdf0b27207e ""
   "figures/RecursiveLink.png" 1784374513 62996 e2790d4fac3d8f7490c01139fb51574d ""
   "figures/RecursiveMAS.png" 1784374488 139825 2ccb3e02db72334dc67f8da4e799209c ""
+  "figures/See what i see.png" 1784466532 120817 43d6e8dbcdb0476800a66361cc3414a3 ""
   "loadslides.tex" 1784265430 3605 9afa386d49f50f00ae3f7d9173309456 ""
-  "rewrite_body.tex" 1784375043 17339 e89ed2365fd42cb404e670a6bc60a5a9 ""
-  "slides.aux" 1784375050 4540 6deac3a2d3bd8d87718f814dc8700ebd "xelatex"
+  "rewrite_body.tex" 1784466722 7321 5b924361c14e4080778898a1adf4a5a2 ""
+  "slides.aux" 1784466729 2658 bfd3bf11522c708e13965992dd709dc3 "xelatex"
   "slides.bbl" 1784374707 466 ee04f40f768daeed26442158e95aba61 "biber slides"
-  "slides.nav" 1784375050 2132 fd3c6a4646f7c99e92f38a847e2deaad "xelatex"
-  "slides.out" 1784375049 0 d41d8cd98f00b204e9800998ecf8427e "xelatex"
-  "slides.run.xml" 1784375050 2510 a2d6c119bb8bc2ce76aa018a951cced0 "xelatex"
+  "slides.nav" 1784466729 1108 c41729a9fe5f113cf01f0ff96714837e "xelatex"
+  "slides.out" 1784466728 0 d41d8cd98f00b204e9800998ecf8427e "xelatex"
+  "slides.run.xml" 1784466729 2510 a2d6c119bb8bc2ce76aa018a951cced0 "xelatex"
   "slides.tex" 1784265477 5443 3b8c02779894b85fa1e4dda6e8ae5b49 ""
   "styles/beamercolorthemeelegant.sty" 1784265430 3878 4258af8fbaca016dcbc75e52902c48e7 ""
   "styles/beamerfontthemeelegant.sty" 1784265430 988 66866602cbc9a3f68add9d224432215f ""

@@ -35,93 +35,6 @@
 \end{center}
 \end{frame}
 
-\begin{frame}{문제 설정: Text Communication의 병목}
-\small
-\begin{center}
-\begin{tikzpicture}[node distance=1.0cm]
-\node[box, minimum width=2.6cm] (a) {Agent A\\\scriptsize role prompt};
-\node[smallbox, minimum width=2.6cm, right=0.8cm of a] (dec) {decode\\text};
-\node[smallbox, minimum width=2.7cm, right=0.8cm of dec] (enc) {re-tokenize\\prefill};
-\node[greenbox, minimum width=2.6cm, right=0.8cm of enc] (b) {Agent B\\\scriptsize role prompt};
-\draw[arrow] (a) -- (dec);
-\draw[arrow] (dec) -- (enc);
-\draw[arrow] (enc) -- (b);
-\end{tikzpicture}
-\end{center}
-
-\vspace{0.5em}
-\begin{columns}[T,onlytextwidth]
-\column{0.32\textwidth}
-\begin{block}{정보 손실}
-\scriptsize
-고차원 내부 표현을 선형 text token으로 압축한다.
-\end{block}
-\column{0.32\textwidth}
-\begin{block}{지연}
-\scriptsize
-중간 agent가 token-by-token decoding을 해야 한다.
-\end{block}
-\column{0.32\textwidth}
-\begin{block}{역할 불일치}
-\scriptsize
-agent마다 prompt와 objective가 다르면 같은 text도 다르게 해석된다.
-\end{block}
-\end{columns}
-
-\vspace{0.8em}
-\centering
-\term{핵심 질문}: heterogeneous MAS에서 text 대신 어떤 latent state를 넘길 것인가?
-\end{frame}
-
-\begin{frame}{LatentMAS: latent thought와 KV working memory}
-\small
-\begin{columns}[T,onlytextwidth]
-\column{0.47\textwidth}
-\begin{block}{Latent thought generation}
-\[
-h_t = f_\theta(e_{\le t}), \qquad
-e_{t+1}=h_t W_a
-\]
-\[
-W_a \approx W_{\mathrm{out}}^\dagger W_{\mathrm{in}}
-\]
-\scriptsize
-token을 decode하지 않고 last-layer hidden state를 다음 input embedding으로 다시 넣는다.
-\end{block}
-
-\column{0.49\textwidth}
-\begin{block}{KV working memory transfer}
-\[
-M_A=\{(K_A^\ell,V_A^\ell)\}_{\ell=1}^{L}
-\]
-\[
-K_B^\ell \leftarrow [K_A^\ell;K_B^\ell], \quad
-V_B^\ell \leftarrow [V_A^\ell;V_B^\ell]
-\]
-\scriptsize
-agent A가 만든 layer-wise KV cache를 agent B의 prefix memory처럼 붙인다.
-\end{block}
-\end{columns}
-
-\vspace{0.5em}
-\begin{center}
-\begin{tikzpicture}[node distance=0.85cm]
-\node[box, minimum width=2.3cm] (a) {Agent A};
-\node[smallbox, minimum width=2.2cm, right=0.7cm of a] (lat) {latent\\thoughts};
-\node[purplebox, minimum width=2.4cm, right=0.7cm of lat] (kv) {KV memory};
-\node[greenbox, minimum width=2.3cm, right=0.7cm of kv] (b) {Agent B};
-\draw[arrow] (a) -- (lat);
-\draw[arrow] (lat) -- (kv);
-\draw[arrow] (kv) -- (b);
-\end{tikzpicture}
-\end{center}
-\end{frame}
-
-\begin{frame}{LatentMAS overview}
-\centering
-\includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{figures/LatentMAS.png}
-\end{frame}
-
 \begin{frame}{LatentMAS의 한계: heterogeneous setting}
 \small
 \begin{block}{논문 구조의 강한 가정}
@@ -150,83 +63,14 @@ agent A가 만든 layer-wise KV cache를 agent B의 prefix memory처럼 붙인�
 \end{block}
 \end{frame}
 
-\begin{frame}{RecursiveMAS: inner-loop와 outer communication}
-\small
-\begin{columns}[T,onlytextwidth]
-\column{0.48\textwidth}
-\begin{block}{Inner recursive link}
-\[
-R_{\mathrm{in}}(h)=h+W_2\sigma(W_1h)
-\]
-\[
-\mathcal{L}_{\mathrm{in}}
-=1-\cos(R_{\mathrm{in}}(H), \mathrm{Emb}(y))
-\]
-\scriptsize
-latent state를 정답 label 또는 teacher-generated target 쪽으로 정렬한다.
-\end{block}
-
-\column{0.48\textwidth}
-\begin{block}{Outer communication}
-\[
-R_{\mathrm{out}}(h)=W_3h+W_2\sigma(W_1h)
-\]
-\scriptsize
-agent 사이에는 주로 last-layer hidden representation을 adapter로 변환해 전달한다.
-\end{block}
-\end{columns}
-
-\vspace{0.7em}
-\begin{center}
-\begin{tikzpicture}[node distance=0.8cm]
-\node[box, minimum width=2.5cm] (p) {Planner};
-\node[smallbox, minimum width=2.5cm, right=0.8cm of p] (h) {hidden state};
-\node[yellowbox, minimum width=2.5cm, right=0.8cm of h] (ad) {outer adapter};
-\node[greenbox, minimum width=2.5cm, right=0.8cm of ad] (s) {Solver};
-\draw[arrow] (p) -- (h);
-\draw[arrow] (h) -- (ad);
-\draw[arrow] (ad) -- (s);
-\end{tikzpicture}
-\end{center}
-\end{frame}
-
-\begin{frame}{RecursiveLink}
-\centering
-\includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{figures/RecursiveLink.png}
-\end{frame}
-
 \begin{frame}{RecursiveMAS overview}
 \centering
 \includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{figures/RecursiveMAS.png}
 \end{frame}
 
-\begin{frame}{RecursiveMAS의 약점}
-\small
-\begin{columns}[T,onlytextwidth]
-\column{0.48\textwidth}
-\begin{block}{학습 supervision 문제}
-\begin{itemize}
-  \item closed-form QA에서는 정답 label이 명확하다.
-  \item planner/refiner target은 teacher rewrite에 의존한다.
-  \item open-ended MAS에서는 role-level gold trace가 애매하다.
-\end{itemize}
-\end{block}
-
-\column{0.48\textwidth}
-\begin{block}{전달 단위 문제}
-\begin{itemize}
-  \item layer-wise KV가 아니라 hidden representation 전달이다.
-  \item transformer attention memory 자체를 넘기지 않는다.
-  \item heterogeneous agent 간 shape mismatch를 별도 처리해야 한다.
-\end{itemize}
-\end{block}
-\end{columns}
-
-\vspace{0.8em}
-\begin{block}{}
-\small
-우리 실험에서는 RecursiveMAS inner-loop는 비교 공정성을 위해 유지하고, cross-agent communication만 KV prefix translation으로 교체한다.
-\end{block}
+\begin{frame}{RecursiveLink}
+\centering
+\includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{figures/RecursiveLink.png}
 \end{frame}
 
 \begin{frame}{Cache-to-Cache: pairwise cache fusion}
@@ -268,6 +112,37 @@ C2C는 receiver가 이미 같은 input \(X\)를 prefill해서 만든 cache를 �
 }
 \end{frame}
 
+\begin{frame}{See What I See: dense heterogeneous KV alignment}
+\small
+\begin{center}
+\includegraphics[width=\linewidth,height=0.58\textheight,keepaspectratio]{figures/See what i see.png}
+\end{center}
+
+\vspace{-0.2em}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{Phase 1: reconstruction}
+\scriptsize
+Sender와 receiver에 같은 프롬프트를 넣어 각각 KV를 만든다.
+Adapter는 sender KV를 receiver가 만들었을 KV처럼 맞추도록 학습한다.
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{Phase 2: generation}
+\scriptsize
+맞춘 KV를 receiver의 past cache로 실제 주입한다.
+이제 ``모양만 비슷한 KV''가 아니라 답 생성에 도움이 되는 KV가 되도록 CE로 학습한다.
+\end{block}
+\end{columns}
+
+\vspace{0.3em}
+\begin{block}{한계}
+\scriptsize
+Dense KV alignment는 강하지만, 기본 단위는 same-source-context cache translation이다.
+Role-conditioned latent thought handoff는 별도 문제로 남는다.
+\end{block}
+\end{frame}
+
 \begin{frame}{C2C에서 fusion을 쓰는 이유}
 \small
 \begin{columns}[T,onlytextwidth]
@@ -297,270 +172,43 @@ C2C는 receiver가 이미 같은 input \(X\)를 prefill해서 만든 cache를 �
 \end{block}
 \end{frame}
 
-\begin{frame}{HeteroMAS: KV prefix translation}
+\begin{frame}{현재 Heterogeneous KV 연구들의 한계}
 \small
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\begin{block}{무엇을 잘하나}
+\begin{itemize}
+  \item 서로 다른 모델의 KV cache shape을 맞춘다.
+  \item sender cache를 receiver-native cache로 번역한다.
+  \item text decode/re-encode 비용을 줄인다.
+\end{itemize}
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{무엇이 빠져 있나}
+\begin{itemize}
+  \item sender가 role-conditioned \term{latent thought}를 생성하지 않는다.
+  \item 같은 source context \(X\)의 cache alignment에 가깝다.
+  \item MAS의 planner \(\rightarrow\) refiner \(\rightarrow\) solver handoff를 직접 모델링하지 않는다.
+\end{itemize}
+\end{block}
+\end{columns}
+
+\vspace{0.8em}
 \begin{center}
-\begin{tikzpicture}[node distance=0.85cm]
-\node[box, minimum width=2.6cm] (a) {Sender Agent\\\scriptsize role prompt};
-\node[smallbox, minimum width=2.5cm, right=0.8cm of a] (kv) {past\_key\_values\\\scriptsize \(C_A\)};
-\node[purplebox, minimum width=2.8cm, right=0.8cm of kv] (tr) {CacheTranslator\\\scriptsize \(A\rightarrow B\)};
-\node[greenbox, minimum width=2.7cm, right=0.8cm of tr] (b) {Receiver Agent\\\scriptsize prefix KV + prompt};
-\draw[arrow] (a) -- (kv);
-\draw[arrow] (kv) -- (tr);
-\draw[arrow] (tr) -- (b);
+\begin{tikzpicture}[node distance=0.75cm]
+\node[box, minimum width=3.2cm] (cache) {Existing Hetero KV\\\scriptsize \(C_S(X)\rightarrow \tilde C_R(X)\)};
+\node[redbox, minimum width=2.8cm, right=0.9cm of cache] (gap) {Missing\\\scriptsize latent thought};
+\node[greenbox, minimum width=3.2cm, right=0.9cm of gap] (mas) {Target MAS Handoff\\\scriptsize \(C_{\mathrm{think}}\rightarrow\) role slot};
+\draw[arrow] (cache) -- (gap);
+\draw[arrow] (gap) -- (mas);
 \end{tikzpicture}
 \end{center}
 
 \vspace{0.5em}
-\begin{block}{실행 순서}
-\[
-A\ \mathrm{forward}
-\rightarrow C_A
-\rightarrow \hat{C}_{A\rightarrow B}
-\rightarrow B\ \mathrm{forward}(\mathrm{past\_key\_values}=\hat{C}_{A\rightarrow B})
-\]
-\end{block}
-
-\vspace{0.3em}
-\begin{block}{}
-\scriptsize
-중요: receiver KV를 먼저 만들고 섞는 것이 아니라, receiver가 자기 prompt를 처리하기 \textbf{전에} translated KV가 prefix로 들어간다.
-\end{block}
-\end{frame}
-
-\begin{frame}{왜 receiver KV를 안 보나?}
+\begin{block}{핵심 문제}
 \small
-\begin{columns}[T,onlytextwidth]
-\column{0.48\textwidth}
-\begin{block}{Receiver KV를 보면}
-\begin{itemize}
-  \item Receiver prompt prefill이 먼저 필요하다.
-  \item 이후 cache editing/fusion 문제가 된다.
-  \item text 없이도 두 모델의 cache를 token-level로 맞춰야 한다.
-\end{itemize}
+기존 heterogeneous KV transfer는 ``내가 본 context를 네 cache로 바꾼다''에 가깝고,
+우리가 필요한 것은 ``내가 agent role에서 생각한 latent state를 네 role의 communication slot으로 넘긴다''이다.
 \end{block}
-
-\column{0.48\textwidth}
-\begin{block}{Sender-only translation이면}
-\begin{itemize}
-  \item sender의 latent memory만 receiver shape으로 바꾸면 된다.
-  \item token length alignment가 필요 없다.
-  \item receiver는 prefix를 보고 자기 role reasoning을 시작한다.
-\end{itemize}
-\end{block}
-\end{columns}
-
-\vspace{0.8em}
-\begin{center}
-\begin{tikzpicture}[node distance=0.8cm]
-\node[redbox, minimum width=3.2cm] (fusion) {post-hoc fusion\\\scriptsize \(C_A+C_B\)};
-\node[greenbox, minimum width=3.2cm, right=1.0cm of fusion] (prefix) {prefix conditioning\\\scriptsize \(\hat{C}_{A\rightarrow B}\rightarrow B\)};
-\draw[greenarrow] (fusion) -- node[above, font=\scriptsize] {우리 선택} (prefix);
-\end{tikzpicture}
-\end{center}
-\end{frame}
-
-\begin{frame}{Layer alignment: depth-normalized mapping}
-\small
-\begin{block}{Receiver-driven mapping}
-Receiver layer \(r\in\{0,\ldots,L_B-1\}\)에 대해 sender layer를 선택한다.
-\[
-s(r)
-=\mathrm{round}\!\left(
-r\cdot \frac{L_A-1}{L_B-1}
-\right)
-\]
-\[
-\ell_A=s(r), \qquad \ell_B=r
-\]
-\end{block}
-
-\vspace{0.4em}
-\begin{center}
-\begin{tikzpicture}[x=0.55cm,y=0.55cm]
-\foreach \i in {0,...,5} {
-  \node[smallbox, minimum width=0.8cm, minimum height=0.45cm] (a\i) at (0,-\i) {\scriptsize A\i};
-}
-\foreach \j in {0,...,8} {
-  \node[greenbox, minimum width=0.8cm, minimum height=0.45cm] (b\j) at (6,-0.625*\j) {\scriptsize B\j};
-}
-\draw[grayarrow] (a0) -- (b0);
-\draw[grayarrow] (a1) -- (b2);
-\draw[grayarrow] (a2) -- (b3);
-\draw[grayarrow] (a3) -- (b5);
-\draw[grayarrow] (a4) -- (b6);
-\draw[grayarrow] (a5) -- (b8);
-\end{tikzpicture}
-\end{center}
-
-\vspace{0.2em}
-\scriptsize
-one-to-many 또는 many-to-one이 생길 수 있지만, layer depth semantics를 보존한다는 점에서 all-layer concat/split보다 안정적이다.
-\end{frame}
-
-\begin{frame}{CacheTranslator: token-wise MLP projection}
-\small
-\begin{block}{Sender KV}
-\[
-K_A^{s(r)},V_A^{s(r)}
-\in \mathbb{R}^{B\times H_A\times T_A\times d_A}
-\]
-\end{block}
-
-\begin{block}{Head와 head dimension만 flatten, token 축은 유지}
-\[
-X_A^r
-=\Flatten([K_A^{s(r)},V_A^{s(r)}])
-\in \mathbb{R}^{B\times T_A\times 2H_A d_A}
-\]
-\[
-Y_A^r
-=W_2\sigma(W_1X_A^r + e_r)
-\in \mathbb{R}^{B\times T_A\times 2H_B d_B}
-\]
-\end{block}
-
-\begin{block}{Receiver shape으로 복원}
-\[
-(\hat K_{A\rightarrow B}^{r},\hat V_{A\rightarrow B}^{r})
-=\Reshape_B(Y_A^r)
-\in \mathbb{R}^{B\times H_B\times T_A\times d_B}
-\]
-\end{block}
-\end{frame}
-
-\begin{frame}{Receiver attention: prepend 방식}
-\small
-\begin{block}{Translated prefix KV}
-\[
-\hat{C}_{A\rightarrow B}
-=\{(\hat K_{A\rightarrow B}^{r},\hat V_{A\rightarrow B}^{r})\}_{r=0}^{L_B-1}
-\]
-\end{block}
-
-\begin{block}{Receiver가 자기 prompt를 처리할 때}
-\[
-K_{\mathrm{total}}^r=[\hat K_{A\rightarrow B}^{r};K_B^r],
-\qquad
-V_{\mathrm{total}}^r=[\hat V_{A\rightarrow B}^{r};V_B^r]
-\]
-\[
-\mathrm{Attn}(Q_B^r,K_{\mathrm{total}}^r,V_{\mathrm{total}}^r)
-=
-\mathrm{softmax}\!\left(
-\frac{Q_B^r(K_{\mathrm{total}}^r)^\top}{\sqrt{d_B}}
-\right)V_{\mathrm{total}}^r
-\]
-\end{block}
-
-\begin{block}{}
-\scriptsize
-토큰 길이 \(T_A\)를 \(T_B\)에 맞출 필요가 없다. Prefix sequence가 앞에 추가될 뿐이고, receiver의 실제 prompt token은 그대로 유지된다.
-\end{block}
-\end{frame}
-
-\begin{frame}{Multi-agent 구조에서의 KV 전달}
-\small
-\begin{columns}[T,onlytextwidth]
-\column{0.48\textwidth}
-\begin{block}{Sequential}
-\[
-\mathrm{Planner}
-\rightarrow \hat{C}_{P\rightarrow R}
-\rightarrow \mathrm{Refiner}
-\rightarrow \hat{C}_{R\rightarrow S}
-\rightarrow \mathrm{Solver}
-\]
-\scriptsize
-Recursive round가 있으면 solver KV를 다음 round planner prefix로 번역한다.
-\end{block}
-
-\column{0.48\textwidth}
-\begin{block}{Hierarchical}
-\[
-\hat C_{M\rightarrow Z}
-\oplus
-\hat C_{C\rightarrow Z}
-\oplus
-\hat C_{S\rightarrow Z}
-\rightarrow
-\mathrm{Summarizer}
-\]
-\scriptsize
-각 expert KV를 summarizer-shaped KV로 번역하고 sequence dimension으로 concat한다.
-\end{block}
-\end{columns}
-
-\vspace{0.7em}
-\begin{center}
-\begin{tikzpicture}[node distance=0.65cm]
-\node[box, minimum width=2.0cm] (m) {Math};
-\node[box, minimum width=2.0cm, below=0.45cm of m] (c) {Code};
-\node[box, minimum width=2.0cm, below=0.45cm of c] (s) {Science};
-\node[purplebox, minimum width=2.4cm, right=1.0cm of c] (t) {Translate\\to Z};
-\node[greenbox, minimum width=2.5cm, right=1.0cm of t] (z) {Summarizer};
-\draw[arrow] (m.east) -- (t.west);
-\draw[arrow] (c.east) -- (t.west);
-\draw[arrow] (s.east) -- (t.west);
-\draw[arrow] (t) -- (z);
-\end{tikzpicture}
-\end{center}
-\end{frame}
-
-\begin{frame}{구조 비교}
-\scriptsize
-\renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{>{\bfseries}p{2.0cm}XXXX}
-\toprule
-Method & 전달 단위 & Heterogeneous & 학습 & 우리와의 차이 \\
-\midrule
-LatentMAS
-& last hidden + KV memory
-& 약함
-& training-free
-& raw KV transfer 중심, shape mismatch가 main이 아님 \\
-RecursiveMAS
-& hidden state / recursive link
-& 가능
-& inner/outer 학습
-& KV attention memory가 아니라 hidden 전달 \\
-C2C
-& sender KV + receiver KV fusion
-& pairwise 가능
-& fuser 학습
-& 같은 input cache를 fusion하는 구조 \\
-HeteroMAS
-& translated KV prefix
-& 목표 설정
-& translator 학습
-& role-specialized agent 사이 sender-only KV prepend \\
-\bottomrule
-\end{tabularx}
-
-\vspace{0.9em}
-\begin{block}{}
-\small
-HeteroMAS의 novelty는 ``latent communication'' 자체가 아니라, heterogeneous role agents 사이에서 KV cache를 receiver-compatible prefix memory로 번역하는 것이다.
-\end{block}
-\end{frame}
-
-\begin{frame}{정리}
-\small
-\begin{enumerate}
-  \item LatentMAS는 text decoding을 줄이지만 homogeneous KV working memory 가정이 강하다.
-  \item RecursiveMAS는 heterogeneous MAS 구조를 갖지만 hidden-state 전달과 role-level supervision 부담이 있다.
-  \item C2C는 KV의 semantic transfer 가능성을 보였지만 receiver KV와의 fusion이 핵심이다.
-  \item HeteroMAS는 RecursiveMAS의 비교 구조를 유지하되, cross-agent 전달을 hidden state가 아니라 KV prefix translation으로 바꾼다.
-\end{enumerate}
-
-\vspace{0.8em}
-\begin{center}
-\begin{tikzpicture}[node distance=0.85cm]
-\node[box, minimum width=2.6cm] (old) {기존 MAS\\\scriptsize text / hidden};
-\node[purplebox, minimum width=2.8cm, right=0.9cm of old] (mid) {KV Translator\\\scriptsize shape alignment};
-\node[greenbox, minimum width=3.0cm, right=0.9cm of mid] (new) {HeteroMAS\\\scriptsize prefix KV communication};
-\draw[arrow] (old) -- (mid);
-\draw[arrow] (mid) -- (new);
-\end{tikzpicture}
-\end{center}
 \end{frame}

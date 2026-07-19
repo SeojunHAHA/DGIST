@@ -1932,21 +1932,21 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm
-INPUT ./figures/LatentMAS.png
-INPUT ./figures/LatentMAS.png
-INPUT figures/LatentMAS.png
-INPUT ./figures/RecursiveLink.png
-INPUT ./figures/RecursiveLink.png
-INPUT figures/RecursiveLink.png
 INPUT ./figures/RecursiveMAS.png
 INPUT ./figures/RecursiveMAS.png
 INPUT figures/RecursiveMAS.png
+INPUT ./figures/RecursiveLink.png
+INPUT ./figures/RecursiveLink.png
+INPUT figures/RecursiveLink.png
 INPUT ./figures/C2C.png
 INPUT ./figures/C2C.png
 INPUT figures/C2C.png
 INPUT ./figures/LCF.png
 INPUT ./figures/LCF.png
 INPUT figures/LCF.png
+INPUT ./figures/See what i see.png
+INPUT ./figures/See what i see.png
+INPUT figures/See what i see.png
 OUTPUT slides.nav
 OUTPUT slides.toc
 OUTPUT slides.snm
